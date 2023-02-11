@@ -20,7 +20,7 @@ async def voice_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await voice.download_to_memory(out=audio_stream)
     audio_stream.seek(0)
 
-    audio_answer = engine(audio_stream)
+    audio_answer = await engine(audio_stream)
 
     await context.bot.send_voice(
         chat_id=update.effective_chat.id, voice=audio_answer,

@@ -4,7 +4,7 @@ from gtts import gTTS
 from io import BytesIO
 
 
-def text_to_speech_coqui(text_: str) -> BytesIO:
+async def text_to_speech_coqui(text_: str) -> BytesIO:
     path = "/home/certo/lesa/venv/lib/python3.10/site-packages/TTS/.models.json"
     model_manager = ModelManager(path)
     model_path, config_path, model_item = model_manager.download_model("tts_models/en/ljspeech/tacotron2-DDC")
@@ -23,7 +23,7 @@ def text_to_speech_coqui(text_: str) -> BytesIO:
     return answer
 
 
-def text_to_speech_google(text_: str) -> BytesIO:
+async def text_to_speech_google(text_: str) -> BytesIO:
     # Initialize gTTS
     answer = BytesIO()
     print('into gtts')
