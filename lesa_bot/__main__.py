@@ -8,6 +8,13 @@ from telegram.ext import (
 from config import TELEGRAM_BOT_TOKEN
 from lesa_bot.handlers import start, message_voice
 
+import logging.config
+from config import LOGGING_CONFIG
+
+logging.config.dictConfig(LOGGING_CONFIG)
+
+logger = logging.getLogger(__name__)
+
 
 def main() -> None:
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
@@ -22,4 +29,10 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception:
+        import traceback
+        logger.warning(traceback.format_exc())
+    finally:
+        pass

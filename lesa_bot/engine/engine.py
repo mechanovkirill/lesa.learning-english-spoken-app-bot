@@ -5,6 +5,8 @@ from io import BytesIO
 from lesa_bot.engine.tts import text_to_speech_google
 from lesa_bot.config import SECRET_KEY
 
+import logging
+logger = logging.getLogger(__name__)
 
 def take_and_convert_to_wav(message_voice) -> BytesIO:
     """convert ogg audio stream to"""

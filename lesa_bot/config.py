@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-import logging
 
 load_dotenv()
 
@@ -15,9 +14,47 @@ TEMPLATES_DIR = BASE_DIR / "templates"
 
 DATE_FORMAT = "%d.%m.%Y"
 
+DEBUG = os.getenv("DEBUG", bool)
 
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO, filename='general.log'
-)
-logger = logging.getLogger(__name__)
+if DEBUG:
+    level = 'INFO'
+    handler = 'info'
+level = 'WARNING'
+handler = 'default'
+
+LOGGING_CONFIG = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{asctime} {name} {levelname} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        }
+    },
+    'handlers': {
+        'default': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'logs/''general.log',
+            'maxBytes': 10000000,
+            'backupCount': 20,
+            'level': 'INFO',
+            'formatter': 'verbose',
+        },
+        'info': {
+            'level': 'INFO',
+            'formatter': 'verbose',
+            'class': 'logging.StreamHandler',
+            'stream': 'ext://sys.stdout',
+        }
+    },
+    'loggers': {
+        '': {
+            'level': f'{level}',
+            'handlers': [f'{handler}'],
+        }
+    },
+}
+
+
+
 

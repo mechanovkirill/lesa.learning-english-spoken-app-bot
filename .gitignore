@@ -1,10 +1,12 @@
 # ide folders
 .idea/
 .vscode/
+/venv
 
 # not project files
 __pycache__
-lesa_bot/db.sqlite3
 .DS_Store
-lesa_bot/.env
-lesa_bot/general.log
+.env
+db.sqlite3
+general.log
+/drafts

@@ -1,15 +1,18 @@
 
 from telegram import Update
 from telegram.ext import ContextTypes
-from lesa_bot.engine.engine import take_and_convert_to_wav
 from io import BytesIO
-from lesa_bot.config import logger
+
+from lesa_bot.engine.engine import take_and_convert_to_wav
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 async def voice_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     bot = context.bot
     user = update.message.from_user
-    logger.info("Gender of %s: %s", user.username, "Going into answer")
+    logger.info("%s: %s", user.username, "Going into answer")
     file_id = update.message.voice.file_id
     voice = await bot.get_file(file_id)
     audio_stream = BytesIO()
