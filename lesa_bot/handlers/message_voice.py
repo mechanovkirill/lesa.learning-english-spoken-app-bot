@@ -3,7 +3,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 from io import BytesIO
 
-from lesa_bot.engine.engine import take_and_convert_to_wav
+from lesa_bot.engine.engine import engine
 
 import logging
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ async def voice_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await voice.download_to_memory(out=audio_stream)
     audio_stream.seek(0)
 
-    audio_answer = take_and_convert_to_wav(audio_stream)
+    audio_answer = engine(audio_stream)
 
     logger.info("Gender of %s: %s", user.first_name, "Going to audio answer")
 

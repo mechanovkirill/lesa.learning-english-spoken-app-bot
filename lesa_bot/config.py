@@ -14,13 +14,7 @@ TEMPLATES_DIR = BASE_DIR / "templates"
 
 DATE_FORMAT = "%d.%m.%Y"
 
-DEBUG = os.getenv("DEBUG", bool)
-
-if DEBUG:
-    level = 'INFO'
-    handler = 'info'
-level = 'WARNING'
-handler = 'default'
+DEBUG = os.getenv("DEBUG", "")
 
 LOGGING_CONFIG = {
     'version': 1,
@@ -37,7 +31,7 @@ LOGGING_CONFIG = {
             'filename': 'logs/''general.log',
             'maxBytes': 10000000,
             'backupCount': 20,
-            'level': 'INFO',
+            'level': 'WARNING',
             'formatter': 'verbose',
         },
         'info': {
@@ -49,12 +43,9 @@ LOGGING_CONFIG = {
     },
     'loggers': {
         '': {
-            'level': f'{level}',
-            'handlers': [f'{handler}'],
+            'level': 'WARNING' if DEBUG == 'False' else 'INFO',
+            'handlers': ['default' if DEBUG == 'False' else 'info'],
         }
     },
 }
-
-
-
 

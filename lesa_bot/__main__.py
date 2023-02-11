@@ -5,11 +5,10 @@ from telegram.ext import (
     filters,
 )
 
-from config import TELEGRAM_BOT_TOKEN
-from lesa_bot.handlers import start, message_voice
+from config import TELEGRAM_BOT_TOKEN, LOGGING_CONFIG
+from handlers import start, message_voice
 
 import logging.config
-from config import LOGGING_CONFIG
 
 logging.config.dictConfig(LOGGING_CONFIG)
 
@@ -20,10 +19,10 @@ def main() -> None:
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
     start_handler = CommandHandler('start', start.start)
-    echo_handler = MessageHandler(filters.VOICE & (~filters.COMMAND), message_voice.voice_answer)
+    echo_voice_handler = MessageHandler(filters.VOICE & (~filters.COMMAND), message_voice.voice_answer)
 
     application.add_handler(start_handler)
-    application.add_handler(echo_handler)
+    application.add_handler(echo_voice_handler)
 
     application.run_polling()
 
