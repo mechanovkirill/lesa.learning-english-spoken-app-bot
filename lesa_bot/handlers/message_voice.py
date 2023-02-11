@@ -10,9 +10,10 @@ logger = logging.getLogger(__name__)
 
 
 async def voice_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    bot = context.bot
     user = update.message.from_user
-    logger.info("%s: %s", user.username, "Going into answer")
+    logger.info("%s: %s", user.username, "voice_answer start")
+
+    bot = context.bot
     file_id = update.message.voice.file_id
     voice = await bot.get_file(file_id)
     audio_stream = BytesIO()
@@ -20,8 +21,6 @@ async def voice_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     audio_stream.seek(0)
 
     audio_answer = engine(audio_stream)
-
-    logger.info("Gender of %s: %s", user.first_name, "Going to audio answer")
 
     await context.bot.send_voice(
         chat_id=update.effective_chat.id, voice=audio_answer,

@@ -18,19 +18,11 @@ def take_and_convert_to_wav(ogg_file: BytesIO) -> BytesIO:
     return wav_voice
 
 
-def engine(message_voice: BytesIO) -> BytesIO:
-    openai_api_key = SECRET_KEY
-    openai_endpoint = "https://api.openai.com/v1/completions"
-    logger.info('Into engine')
-
-    wav_voice = take_and_convert_to_wav(message_voice)
-    logger.info('Converting to wav passed')
-
+def speech_recognition(speech: BytesIO) -> str:
     # Initialize recognizer class (for recognizing the speech)
     r = sr.Recognizer()
-    with sr.AudioFile(wav_voice) as source:
+    with sr.AudioFile(speech) as source:
         audio_text = r.record(source)
-
 
     try:
         # using google speech recognition
@@ -40,14 +32,19 @@ def engine(message_voice: BytesIO) -> BytesIO:
         print("Sorry, I did not get that")
         text = ""
 
+    return text
+
+
+def request_response(request: str, key: str = SECRET_KEY) -> str:
+    openai_endpoint = "https://api.openai.com/v1/completions"
     # Send the text to the OpenAI API
     response = requests.post(openai_endpoint, headers={
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {openai_api_key}"
+        "Authorization": f"Bearer {key}"
     }, json={
         "model": "text-davinci-003",
         "prompt": "This message will consist of 3 texts."
-                  f"1. {text} "
+                  f"1. {request} "
                   "2. What mistakes are made in the text 1? "
                   "3. If text 1 does not contain a question"
                   "ask a question to keep the conversation going."
@@ -66,13 +63,23 @@ def engine(message_voice: BytesIO) -> BytesIO:
 
     print("OpenAI API Response:", response_text)
 
+    return response_text
+
+
+def engine(message_voice: BytesIO) -> BytesIO:
+    logger.info('Into engine')
+
+    wav_voice = take_and_convert_to_wav(message_voice)
+    logger.info('Converting to wav passed')
+
+    recognized_text = speech_recognition(wav_voice)
+    logger.info('recognized_text passed')
+
+    response_text = request_response(recognized_text)
+    logger.info('Got response')
+
     tts_response = text_to_speech_coqui(response_text)
     # tts_response = text_to_speech_google(response_text)
-
-    # sound = AudioSegment.from_file(tts_response)
-    # audio_answer = BytesIO()
-    # sound.export(out_f=audio_answer, format="ogg")
-    # audio_answer.seek(0)
-    # print("File ogg was saved")
+    logger.info('TTS is passed')
 
     return tts_response
