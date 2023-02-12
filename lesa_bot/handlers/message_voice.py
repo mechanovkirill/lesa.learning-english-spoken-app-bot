@@ -13,6 +13,8 @@ async def voice_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.message.from_user
     logger.info("%s: %s", user.username, "voice_answer start")
 
+
+
     bot = context.bot
     file_id = update.message.voice.file_id
     voice = await bot.get_file(file_id)

@@ -8,6 +8,8 @@ from telegram.ext import (
 from config import TELEGRAM_BOT_TOKEN, LOGGING_CONFIG
 from handlers import start, message_voice
 
+from db.db import close_db
+
 import logging.config
 
 logging.config.dictConfig(LOGGING_CONFIG)
@@ -34,4 +36,4 @@ if __name__ == '__main__':
         import traceback
         logger.warning(traceback.format_exc())
     finally:
-        pass
+        close_db()
