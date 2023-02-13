@@ -8,7 +8,7 @@ from telegram.ext import (
 from config import TELEGRAM_BOT_TOKEN, LOGGING_CONFIG
 from handlers import start, message_voice
 
-from db.db import close_db
+from db import close_db
 
 import logging.config
 

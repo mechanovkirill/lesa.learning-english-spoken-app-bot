@@ -1,0 +1,51 @@
+from __future__ import annotations
+import asyncio
+import datetime
+import logging
+
+from sqlalchemy import Column, BigInteger, String, func
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, create_async_engine
+from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
+
+logger = logging.getLogger(__name__)
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class BotUser(Base):
+    __tablename__ = "bot_users"
+
+    telegram_id: Mapped[int] = Column(BigInteger, primary_key=True)
+    api_key: Mapped[str] = Column(String(80), nullable=True)
+    show_recognized_text: Mapped[int]
+    show_text_answer: Mapped[int]
+    language_: Mapped[int]
+    tts_engine: Mapped[int]
+    stt_engine: Mapped[int]
+    mode: Mapped[int]
+    create_date: Mapped[datetime.datetime] = mapped_column(server_default=func.now())
+
+
+async def async_main() -> None:
+    logger.info("Into async_main")
+    engine = create_async_engine(
+        "sqlite+aiosqlite:///../dbcreate.sqlite3",
+        echo=True,
+    )
+
+    # async_sessionmaker: a factory for new AsyncSession objects.
+    # expire_on_commit - don't expire objects after transaction commit
+    async_session = async_sessionmaker(engine, expire_on_commit=True)
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    # for AsyncEngine created in function scope, close and
+    # clean-up pooled connections
+    await engine.dispose()
+
+asyncio.run(async_main())
+
+async_main()
