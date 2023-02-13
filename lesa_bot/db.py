@@ -18,12 +18,12 @@ async_session = async_sessionmaker(engine, expire_on_commit=True)
 class BotUserClass:
     telegram_id: int
     api_key: str | None
-    show_recognized_text: int
-    show_text_answer: int
-    language_: int
-    tts_engine: int
-    stt_engine: int
-    mode: int
+    show_recognized_text: 1 | 2
+    show_text_answer: 1 | 2
+    language_: 1 | 2
+    tts_engine: 1 | 2
+    stt_engine: 1 | 2
+    mode: 1 | 2
     create_date: datetime.datetime | None
 
 
@@ -83,6 +83,18 @@ async def check_user_exist(
         return False
 
 
+async def set_key(
+        telegram_id: int,
+        value: str,
+        async_session_: async_sessionmaker[AsyncSession] = async_session
+) -> None:
+    logger.info("Into set key")
+    async with async_session_() as session:
+        query = await session.get(BotUser, telegram_id)
+        query.api_key = value
+
+        await session.commit()
+
+
 async def close_db() -> None:
     await engine.dispose()
-

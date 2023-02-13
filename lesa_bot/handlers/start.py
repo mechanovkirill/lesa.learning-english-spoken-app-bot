@@ -21,10 +21,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await add_user(user)
 
         await context.bot.send_message(
-            chat_id=update.effective_chat.id, text=messages.Greeting_message
+            chat_id=update.effective_chat.id, text=messages.GREETING_MESSAGE
         )
         return
 
     await context.bot.send_message(
-        chat_id=update.effective_chat.id, text=messages.Greeting_message
+        chat_id=update.effective_chat.id, text=messages.GREETING_MESSAGE
     )
