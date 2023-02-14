@@ -160,3 +160,6 @@ async def set_mode(
 
 async def close_db() -> None:
     await engine.dispose()
+
+
+

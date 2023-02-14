@@ -6,7 +6,8 @@ from telegram.ext import (
 )
 
 from config import TELEGRAM_BOT_TOKEN, LOGGING_CONFIG
-from handlers import commands_handlers, message_voice
+from handlers import message_voice
+from handlers.commands_handlers import all_command_handlers
 
 from db import close_db
 
@@ -22,9 +23,8 @@ def main() -> None:
 
     echo_voice_handler = MessageHandler(filters.VOICE & (~filters.COMMAND), message_voice.voice_answer)
 
-    application.add_handler(commands_handlers.start_handler)
-    application.add_handler(commands_handlers.setkey_conversation_handler)
-    application.add_handler(commands_handlers.ssro_conversation_handler)
+    for handler in all_command_handlers:
+        application.add_handler(handler)
 
     application.add_handler(echo_voice_handler)
 
