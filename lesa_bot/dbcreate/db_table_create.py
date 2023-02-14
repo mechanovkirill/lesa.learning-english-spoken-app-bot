@@ -4,7 +4,7 @@ import datetime
 import logging
 
 from sqlalchemy import Column, BigInteger, String, func
-from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,6 @@ class BotUser(Base):
     api_key: Mapped[str] = Column(String(80), nullable=True)
     show_recognized_text: Mapped[int]
     show_text_answer: Mapped[int]
-    language_: Mapped[int]
     tts_engine: Mapped[int]
     stt_engine: Mapped[int]
     mode: Mapped[int]
@@ -31,7 +30,7 @@ class BotUser(Base):
 async def async_main() -> None:
     logger.info("Into async_main")
     engine = create_async_engine(
-        "sqlite+aiosqlite:///../dbcreate.sqlite3",
+        "sqlite+aiosqlite:///../db.sqlite3",
         echo=True,
     )
 

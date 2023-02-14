@@ -6,7 +6,7 @@ from telegram.ext import (
 )
 
 from config import TELEGRAM_BOT_TOKEN, LOGGING_CONFIG
-from handlers import start, message_voice, setkey
+from handlers import commands_handlers, message_voice
 
 from db import close_db
 
@@ -20,12 +20,12 @@ logger = logging.getLogger(__name__)
 def main() -> None:
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
-    start_handler = CommandHandler('start', start.start)
-
     echo_voice_handler = MessageHandler(filters.VOICE & (~filters.COMMAND), message_voice.voice_answer)
 
-    application.add_handler(start_handler)
-    application.add_handler(setkey.setkey_handler)
+    application.add_handler(commands_handlers.start_handler)
+    application.add_handler(commands_handlers.setkey_conversation_handler)
+    application.add_handler(commands_handlers.ssro_conversation_handler)
+
     application.add_handler(echo_voice_handler)
 
     application.run_polling()
