@@ -1,16 +1,17 @@
+import asyncio
 import aiohttp
 import speech_recognition as sr
 from pydub import AudioSegment
 from io import BytesIO
 from lesa_bot.engine.tts import text_to_speech_google, text_to_speech_coqui
-from lesa_bot.config import SECRET_KEY
+from lesa_bot.db import BotUserClass
 
 import logging
 logger = logging.getLogger(__name__)
 
 
 async def take_and_convert_to_wav(ogg_file: BytesIO) -> BytesIO:
-    """convert ogg audio stream to"""
+    """convert ogg audio stream to wav"""
     voice_data = AudioSegment.from_file(ogg_file)
     wav_voice = BytesIO()
     voice_data.export(out_f=wav_voice, format="wav")
@@ -35,12 +36,13 @@ async def speech_recognition_google(speech: BytesIO) -> str:
     return text
 
 
-async def request_response(request: str, key: str = SECRET_KEY) -> str:
+async def request_response_OpenAI(request: str, _user_settings: BotUserClass) -> str:
+    """Send request to OpenAI API and return response"""
     openai_endpoint = "https://api.openai.com/v1/completions"
     async with aiohttp.ClientSession() as session:
         async with session.post(openai_endpoint, headers={
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {key}"
+            "Authorization": f"Bearer {_user_settings.api_key}"
         }, json={
             "model": "text-davinci-003",
             "prompt": "This message will consist of 3 texts."
@@ -65,20 +67,33 @@ async def request_response(request: str, key: str = SECRET_KEY) -> str:
             return response_text
 
 
-async def engine(message_voice: BytesIO) -> BytesIO:
+async def voice_engine(message_voice: BytesIO, user_settings: BotUserClass) -> tuple[BytesIO, str] | BytesIO | str:
     logger.info('Into engine')
 
     wav_voice = await take_and_convert_to_wav(message_voice)
     logger.info('Converting to wav passed')
 
-    recognized_text = await speech_recognition_google(wav_voice)
-    logger.info('recognized_text passed')
+    #  Recognize voice
+    try:
+        recognized_text = await asyncio.wait_for(speech_recognition_google(wav_voice), timeout=7)
+        logger.info('recognized_text passed')
+    except asyncio.TimeoutError:
+        logger.warning('speech_recognition_google timed out')
+        try:
+            recognized_text = await asyncio.wait_for(speech_recognition_google(wav_voice), timeout=7)
+            logger.info('recognized_text passed')
+        except asyncio.TimeoutError:
+            logger.warning('speech_recognition_google timed out')
+            return "Failed to get text response from google speech recognition. Timeout exceeded."
 
-    response_text = await request_response(recognized_text)
+    # recognized_text = await speech_recognition_google(wav_voice)
+    # logger.info('recognized_text passed')
+
+    response_text = await request_response_OpenAI(recognized_text, _user_settings=user_settings)
     logger.info('Got response')
 
     tts_response = await text_to_speech_coqui(response_text)
     # tts_response = text_to_speech_google(response_text)
     logger.info('TTS is passed. It is coming back to message')
 
-    return tts_response
+    return tts_response, response_text

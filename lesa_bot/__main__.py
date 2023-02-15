@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 def main() -> None:
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
-    echo_handler = MessageHandler(filters.VOICE & (~filters.COMMAND), voice_answer)
+    echo_handler = MessageHandler((filters.VOICE | filters.TEXT) & ~filters.COMMAND, voice_answer)
 
     for handler in all_command_handlers:
         application.add_handler(handler)
