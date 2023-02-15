@@ -4,6 +4,7 @@ from pydub import AudioSegment
 from io import BytesIO
 from lesa_bot.engine.tts import text_to_speech_google, text_to_speech_coqui
 from lesa_bot.config import SECRET_KEY
+from lesa_bot.db import BotUserClass
 
 import logging
 logger = logging.getLogger(__name__)
@@ -35,7 +36,7 @@ async def speech_recognition_google(speech: BytesIO) -> str:
     return text
 
 
-async def request_response(request: str, key: str = SECRET_KEY) -> str:
+async def request_response(request: str, key: str) -> str:
     openai_endpoint = "https://api.openai.com/v1/completions"
     async with aiohttp.ClientSession() as session:
         async with session.post(openai_endpoint, headers={
@@ -65,7 +66,7 @@ async def request_response(request: str, key: str = SECRET_KEY) -> str:
             return response_text
 
 
-async def engine(message_voice: BytesIO) -> BytesIO:
+async def audio_engine(message_voice: BytesIO, settings: BotUserClass) -> BytesIO:
     logger.info('Into engine')
 
     wav_voice = await take_and_convert_to_wav(message_voice)
@@ -74,7 +75,7 @@ async def engine(message_voice: BytesIO) -> BytesIO:
     recognized_text = await speech_recognition_google(wav_voice)
     logger.info('recognized_text passed')
 
-    response_text = await request_response(recognized_text)
+    response_text = await request_response(recognized_text, key=settings.api_key)
     logger.info('Got response')
 
     tts_response = await text_to_speech_coqui(response_text)
