@@ -61,21 +61,12 @@ async def add_user(bot_user: BotUserClass, async_session_: async_sessionmaker[As
 
 
 async def get_user(telegram_id: int,
-                   async_session_: async_sessionmaker[AsyncSession] = async_session) -> BotUserClass | None:
+                   async_session_: async_sessionmaker[AsyncSession] = async_session) -> BotUser | None:
     logger.info("Into get_user")
     async with async_session_() as session:
-        user = await session.get(BotUser, telegram_id)
-        instance = BotUserClass(
-            telegram_id=user.telegram_id,
-            api_key=user.api_key,
-            show_recognized_text=user.show_recognized_text,
-            show_text_answer=user.show_text_answer,
-            tts_engine=user.tts_engine,
-            stt_engine=user.stt_engine,
-            mode=user.mode,
-            create_date=None
-        )
-        return instance
+        query = await session.get(BotUser, telegram_id)
+        print(query)
+        return query
 
 
 async def check_user_exist(

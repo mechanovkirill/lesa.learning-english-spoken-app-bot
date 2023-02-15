@@ -10,8 +10,7 @@ from lesa_bot.db import (
     set_mode,
     set_stt_engine,
     set_tts_engine,
-    set_show_text_answer,
-    engine
+    set_show_text_answer
 )
 
 import logging
