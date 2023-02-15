@@ -11,6 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 async def voice_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handler. It is receives and transmits users settings from database, voice and text messages from users
+    to engine. And send response to users depending on the answer."""
     user = update.message.from_user
     logger.info("%s: %s", user.username, "voice_answer start")
 
@@ -29,19 +31,30 @@ async def voice_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         #  hand over data to engine
         engine_answer = await voice_engine(audio_stream, user_settings)
 
-        if type(engine_answer) == tuple:
-            await context.bot.send_voice(
-                chat_id=update.effective_chat.id, voice=engine_answer[0],
-            )
+        if isinstance(engine_answer, tuple):
+            print(isinstance(engine_answer, tuple))
             if user_settings.show_recognized_text == 1:
                 await context.bot.send_message(
+                    chat_id=update.effective_chat.id, text=engine_answer[0]
+                )
+            if user_settings.show_text_answer == 1:
+                await context.bot.send_message(
                     chat_id=update.effective_chat.id, text=engine_answer[1]
+                )
+            if isinstance(engine_answer[2], BytesIO):
+                await context.bot.send_voice(
+                    chat_id=update.effective_chat.id, voice=engine_answer[2]
+                )
+            else:
+                await context.bot.send_message(
+                    chat_id=update.effective_chat.id, text=engine_answer[2]
                 )
             return
         else:
             await context.bot.send_message(
-                chat_id=update.effective_chat.id, text="Failed to receive a voice response."
+                chat_id=update.effective_chat.id, text=engine_answer
             )
+            return
 
     if update.message.text:
         await context.bot.send_message(
