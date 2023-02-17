@@ -52,3 +52,15 @@ async def text_to_speech_google_async(text_: str) -> BytesIO:
 # language code to generate TTS audio in that language."""
 
 # text_to_speech_coqui(text)
+
+
+# async def text_to_speech_google_async(text_: str) -> BytesIO:
+#     lang = 'en'
+#     answer = BytesIO()
+#     loop = asyncio.get_event_loop()
+#     print('into gtts')
+#     gtts = await loop.run_in_executor(None, gTTS, text_, lang)
+#     rec = await loop.run_in_executor(None, gtts.write_to_fp, answer)
+#     print('pass gtts')
+#     rec.seek(0)
+#     return rec

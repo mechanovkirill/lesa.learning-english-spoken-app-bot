@@ -1,9 +1,9 @@
-
 from telegram import Update
 from telegram.ext import ContextTypes
 from io import BytesIO
+import asyncio
 
-from lesa_bot.engine.engine import voice_engine
+from lesa_bot.engine.engine import process_voice_message
 from lesa_bot.db import get_user
 
 import logging
@@ -28,8 +28,10 @@ async def voice_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         # get data from database
         user_settings = await get_user(user.id)
 
+        # voice_engine = asyncio.create_task(process_voice_message(audio_stream, user_settings))
+
         #  hand over data to engine
-        engine_answer = await voice_engine(audio_stream, user_settings)
+        engine_answer = await process_voice_message(audio_stream, user_settings)
 
         if isinstance(engine_answer, tuple):
             print(isinstance(engine_answer, tuple))

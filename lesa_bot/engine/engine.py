@@ -1,5 +1,7 @@
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+from typing import Any
+
 import aiohttp
 import speech_recognition as sr
 from pydub import AudioSegment
@@ -28,28 +30,23 @@ async def take_and_convert_to_wav_async(ogg_file: BytesIO) -> BytesIO:
 
 
 #  ---------------------------------------------------------------------------------------------------
-def speech_recognition_google(speech: BytesIO) -> str:
+async def speech_recognition_google(speech: BytesIO) -> str:
+    loop = asyncio.get_event_loop()
     # Initialize recognizer class (for recognizing the speech)
     r = sr.Recognizer()
     with sr.AudioFile(speech) as source:
-        audio_text = r.record(source)
+        with ThreadPoolExecutor() as pool:
+            audio_text = await loop.run_in_executor(pool, r.record, source)
 
     try:
         # using google speech recognition
-        text = r.recognize_google(audio_text)
+        text = await loop.run_in_executor(None, r.recognize_google, audio_text)
         print("Speech Recognition Text:", text)
     except:
         print("Sorry, I did not get that")
         text = ""
 
     return text
-
-
-async def speech_recognition_google_async(speech: BytesIO) -> str:
-    loop = asyncio.get_event_loop()
-    with ThreadPoolExecutor() as pool:
-        result = await loop.run_in_executor(pool, speech_recognition_google, speech)
-    return result
 
 
 #  -----------------------------------------------------------------------------------------------------
@@ -83,25 +80,25 @@ async def request_response_openai(request: str, _user_settings: BotUserClass) ->
             return response_text
 
 
-async def voice_engine(message_voice: BytesIO, user_settings: BotUserClass) -> tuple[BytesIO, str, str] | BytesIO | str:
+def voice_engine(message_voice: BytesIO, user_settings: BotUserClass) -> tuple[BytesIO, str, str] | BytesIO | str:
     logger.info('Into voice engine')
 
-    wav_voice = await take_and_convert_to_wav_async(message_voice)
+    wav_voice = take_and_convert_to_wav(message_voice)
     logger.info('Converting to wav passed')
 
     #  Recognize voice
     recognized_user_text = None
     try:
-        recognized_user_text = await asyncio.wait_for(speech_recognition_google_async(wav_voice), timeout=7)
+        recognized_user_text = await asyncio.wait_for(speech_recognition_google(wav_voice), timeout=1)
         logger.info('recognized_text passed')
     except asyncio.TimeoutError:
-        logger.warning('speech_recognition_google timed out')
+        logger.warning('speech_recognition_google timed out ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
     if recognized_user_text is None:
         try:
-            recognized_user_text = await asyncio.wait_for(speech_recognition_google_async(wav_voice), timeout=5)
+            recognized_user_text = await asyncio.wait_for(speech_recognition_google(wav_voice), timeout=1)
             logger.info('recognized_text passed')
         except asyncio.TimeoutError:
-            logger.warning('speech_recognition_google second timed out')
+            logger.warning('speech_recognition_google second timed out ++++++++++++++++++++++++++++++++++++++++++++++')
             return "Failed to get text response from google speech recognition. Timeout exceeded."
 
     # send request to OpenAI
@@ -118,19 +115,27 @@ async def voice_engine(message_voice: BytesIO, user_settings: BotUserClass) -> t
     tts_response = None
     tts_response_fail = None
     try:
-        tts_response = await asyncio.wait_for(text_to_speech_google_async(response_ai_text), timeout=7)
+        tts_response = await asyncio.wait_for(text_to_speech_google_async(response_ai_text), timeout=1)
         logger.info('TTS is passed. It is coming back to message')
     except asyncio.TimeoutError:
         logger.error('text_to_speech_coqui timed out')
     if tts_response is None:
         try:
-            tts_response = await asyncio.wait_for(text_to_speech_google_async(response_ai_text), timeout=5)
+            tts_response = await asyncio.wait_for(text_to_speech_google_async(response_ai_text), timeout=1)
             logger.info('TTS is passed. It is coming back to message')
         except asyncio.TimeoutError:
             logger.error('text_to_speech_coqui timed out')
             tts_response_fail = "Failed to convert response text to speech. Timeout exceeded."
 
     return recognized_user_text, response_ai_text, tts_response if tts_response else tts_response_fail
+
+
+async def process_voice_message(audio_stream: BytesIO, user_settings: BotUserClass) -> Any:
+    loop = asyncio.get_event_loop()
+    with ThreadPoolExecutor() as pool:
+        engine_answer = await loop.run_in_executor(pool, voice_engine, audio_stream, user_settings)
+
+    return engine_answer
 
 
 
