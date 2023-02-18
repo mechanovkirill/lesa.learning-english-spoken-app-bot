@@ -1,5 +1,7 @@
+import asyncio
 import threading
 from queue import Queue
+from func_timeout import func_timeout
 
 import requests
 import speech_recognition as sr
@@ -9,38 +11,11 @@ from TTS.utils.synthesizer import Synthesizer
 from gtts import gTTS
 from io import BytesIO
 from lesa_bot.db import BotUserClass
+from telegram import Bot
+from lesa_bot.config import TELEGRAM_BOT_TOKEN
 
 import logging
 logger = logging.getLogger(__name__)
-
-
-def text_to_speech_coqui(text_: str) -> BytesIO:
-    path = "/home/certo/lesa/venv/lib/python3.10/site-packages/TTS/.models.json"
-    model_manager = ModelManager(path)
-    model_path, config_path, model_item = model_manager.download_model("tts_models/en/ljspeech/tacotron2-DDC")
-    voc_path, voc_config_path, _ = model_manager.download_model(model_item["default_vocoder"])
-
-    syn = Synthesizer(
-        tts_checkpoint=model_path,
-        tts_config_path=config_path,
-        vocoder_checkpoint=voc_path,
-        vocoder_config=voc_config_path
-    )
-
-    outputs = syn.tts(text_)
-    answer = BytesIO()
-    syn.save_wav(outputs, answer)
-    return answer
-
-
-def text_to_speech_google(text_: str) -> BytesIO:
-    # Initialize gTTS
-    answer = BytesIO()
-    print('into gtts')
-    gTTS(text=text_, lang='en').write_to_fp(answer)
-    print('pass gtts')
-    answer.seek(0)
-    return answer
 
 
 def take_and_convert_to_wav(ogg_file: BytesIO) -> BytesIO:
@@ -57,6 +32,7 @@ def speech_recognition(speech: BytesIO) -> str:
     r = sr.Recognizer()
     with sr.AudioFile(speech) as source:
         audio_text = r.record(source)
+    logger.info('Converted to flac')
 
     try:
         # using google speech recognition
@@ -100,29 +76,69 @@ def request_to_openai(request: str, user_settings: tuple[BytesIO, BotUserClass])
     return response_text
 
 
+def text_to_speech_coqui(text_: str) -> BytesIO:
+    path = "/home/certo/lesa/venv/lib/python3.10/site-packages/TTS/.models.json"
+    model_manager = ModelManager(path)
+    model_path, config_path, model_item = model_manager.download_model("tts_models/en/ljspeech/tacotron2-DDC")
+    voc_path, voc_config_path, _ = model_manager.download_model(model_item["default_vocoder"])
+
+    syn = Synthesizer(
+        tts_checkpoint=model_path,
+        tts_config_path=config_path,
+        vocoder_checkpoint=voc_path,
+        vocoder_config=voc_config_path
+    )
+
+    outputs = syn.tts(text_)
+    answer = BytesIO()
+    syn.save_wav(outputs, answer)
+    return answer
+
+
+def text_to_speech_google(text_: str) -> BytesIO:
+    # Initialize gTTS
+    answer = BytesIO()
+    print('into gtts')
+    gTTS(text=text_, lang='en').write_to_fp(answer)
+    print('pass gtts')
+    answer.seek(0)
+    return answer
+
+
 queue = Queue()
 
 
 def voice_engine() -> None:
     logger.info('Into engine')
+    logger.info(f'{threading.active_count()}')
+    logger.info(f'{threading.current_thread()}')
 
     while True:
-
         message__user_settings = queue.get()
 
-        if message__user_settings[0] is BytesIO:
-            wav_voice = take_and_convert_to_wav(message__user_settings[0])
-            logger.info('Converting to wav passed')
+        # if message__user_settings[0] is BytesIO:
+        wav_voice = take_and_convert_to_wav(message__user_settings[0])
+        logger.info('Converting to wav passed')
 
-            recognized_text = speech_recognition(wav_voice)
-            logger.info('recognized_text passed')
+        recognized_text = speech_recognition(wav_voice)
+        logger.info('recognized_text passed')
 
-            response_text = request_to_openai(recognized_text, user_settings=message__user_settings[1].api_key)
-            logger.info('Got response')
+        response_text = request_to_openai(recognized_text, user_settings=message__user_settings[1].api_key)
+        logger.info('Got response')
 
-            tts_response = text_to_speech_coqui(response_text)
-            # tts_response = text_to_speech_google(response_text)
-            logger.info('TTS is passed')
+        # tts_response = text_to_speech_coqui(response_text)
+        # tts_response = text_to_speech_google(response_text)
+        logger.info('TTS is passed')
+
+        async def send_replay():
+            bot = Bot(token=TELEGRAM_BOT_TOKEN)
+            async with bot:
+                await bot.send_message(
+                    chat_id=message__user_settings[1].telegram_id,
+                    text=response_text
+                )
+
+        asyncio.run(send_replay())
 
 
 thread_engine = threading.Thread(target=voice_engine, daemon=True).start()

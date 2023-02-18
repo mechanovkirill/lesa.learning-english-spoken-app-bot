@@ -17,24 +17,17 @@ async def voice_text_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     logger.info("%s: %s", user.username, "voice_answer start")
 
     bot = context.bot
+    file_id = update.message.voice.file_id
+    voice = await bot.get_file(file_id)
+    audio_stream = BytesIO()
+    await voice.download_to_memory(out=audio_stream)
+    audio_stream.seek(0)
 
-    if update.message.voice:
-        file_id = update.message.voice.file_id
-        voice = await bot.get_file(file_id)
-        audio_stream = BytesIO()
-        await voice.download_to_memory(out=audio_stream)
-        audio_stream.seek(0)
+    # get data from database
+    user_settings = await get_user(user.id)
 
-        # get data from database
-        user_settings = await get_user(user.id)
-
-        #  hand over data to engine through queue
-        message__user_settings = (audio_stream, user_settings, )
-        queue.put(message__user_settings)
-
-    if update.message.text:
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id, text="This is a text!"
-        )
+    #  hand over data to engine through queue
+    message__user_settings = (audio_stream, user_settings, )
+    queue.put(message__user_settings)
 
 
