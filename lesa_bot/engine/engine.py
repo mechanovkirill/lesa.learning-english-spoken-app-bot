@@ -1,6 +1,5 @@
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
-from typing import Any
+import threading
+from queue import Queue
 
 import requests
 import speech_recognition as sr
@@ -70,12 +69,12 @@ def speech_recognition(speech: BytesIO) -> str:
     return text
 
 
-def request_to_openai(request: str, key: str) -> str:
+def request_to_openai(request: str, user_settings: tuple[BytesIO, BotUserClass]) -> str:
     openai_endpoint = "https://api.openai.com/v1/completions"
     # Send the text to the OpenAI API
     response = requests.post(openai_endpoint, headers={
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {key}"
+        "Authorization": f"Bearer {user_settings}"
     }, json={
         "model": "text-davinci-003",
         "prompt": "This message will consist of 3 texts."
@@ -101,26 +100,31 @@ def request_to_openai(request: str, key: str) -> str:
     return response_text
 
 
-def voice_engine(message_voice: BytesIO, user_settings: BotUserClass) -> BytesIO:
+queue = Queue()
+
+
+def voice_engine() -> None:
     logger.info('Into engine')
 
-    wav_voice = take_and_convert_to_wav(message_voice)
-    logger.info('Converting to wav passed')
+    while True:
 
-    recognized_text = speech_recognition(wav_voice)
-    logger.info('recognized_text passed')
+        message__user_settings = queue.get()
 
-    response_text = request_to_openai(recognized_text, key=user_settings.api_key)
-    logger.info('Got response')
+        if message__user_settings[0] is BytesIO:
+            wav_voice = take_and_convert_to_wav(message__user_settings[0])
+            logger.info('Converting to wav passed')
 
-    # tts_response = text_to_speech_coqui(response_text)
-    tts_response = text_to_speech_google(response_text)
-    logger.info('TTS is passed')
+            recognized_text = speech_recognition(wav_voice)
+            logger.info('recognized_text passed')
 
-    return tts_response
+            response_text = request_to_openai(recognized_text, user_settings=message__user_settings[1].api_key)
+            logger.info('Got response')
+
+            tts_response = text_to_speech_coqui(response_text)
+            # tts_response = text_to_speech_google(response_text)
+            logger.info('TTS is passed')
 
 
-async def sync_engine_to_async(message_voice: BytesIO, user_settings: BotUserClass) -> BytesIO:
-
+thread_engine = threading.Thread(target=voice_engine, daemon=True).start()
 
 
