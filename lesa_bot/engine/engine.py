@@ -1,7 +1,8 @@
 import asyncio
 import threading
+import time
 from queue import Queue
-from func_timeout import func_timeout
+from func_timeout import func_timeout, FunctionTimedOut
 
 import requests
 import speech_recognition as sr
@@ -38,30 +39,43 @@ def speech_recognition(speech: BytesIO) -> str:
         # using google speech recognition
         text = r.recognize_google(audio_text)
         print("Speech Recognition Text:", text)
-    except:
+    except FunctionTimedOut:
         print("Sorry, I did not get that")
         text = ""
 
     return text
 
 
-def request_to_openai(request: str, user_settings: tuple[BytesIO, BotUserClass]) -> str:
+def request_to_openai(_text: str, user_settings: tuple[BytesIO, BotUserClass]) -> str:
     openai_endpoint = "https://api.openai.com/v1/completions"
-    # Send the text to the OpenAI API
-    response = requests.post(openai_endpoint, headers={
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {user_settings}"
-    }, json={
+
+    mode = None
+    if user_settings[1].mode == 1:
+        print(user_settings[1].mode)
+        mode = {
         "model": "text-davinci-003",
         "prompt": "This message will consist of 3 texts."
-                  f"1. {request} "
+                  f"1. {_text} "
                   "2. What mistakes are made in the text 1? "
                   "3. If text 1 does not contain a question"
                   "ask a question to keep the conversation going."
                   "Don't repeat numbers and instructions",
         "max_tokens": 100,
         "temperature": 0.7,
-    })
+    }
+    else:
+        mode = {
+            "model": "text-davinci-003",
+            "prompt": f"{_text}",
+            "max_tokens": 100,
+            "temperature": 0.7,
+        }
+
+    # Send the text to the OpenAI API
+    response = requests.post(openai_endpoint, headers={
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {user_settings[1].api_key}"
+    }, json=mode)
 
     # Get the response from the OpenAI API
     try:
@@ -115,21 +129,33 @@ def voice_engine() -> None:
 
     while True:
         message__user_settings = queue.get()
-
+        print(message__user_settings)
         # if message__user_settings[0] is BytesIO:
         wav_voice = take_and_convert_to_wav(message__user_settings[0])
         logger.info('Converting to wav passed')
 
-        recognized_text = speech_recognition(wav_voice)
-        logger.info('recognized_text passed')
+        recognized_text = None
+        try:
+            recognized_text = func_timeout(timeout=1, func=speech_recognition, kwargs=dict(speech=wav_voice))
+            logger.info('recognized_text passed')
+            print(recognized_text)
+        except FunctionTimedOut:
+            print('speech_recognition time out!')
+            try:
+                recognized_text = func_timeout(timeout=6, func=speech_recognition, kwargs=dict(speech=wav_voice))
+                logger.info('recognized_text passed')
+                print(recognized_text)
+            except FunctionTimedOut:
+                print('The second speech_recognition time out!')
 
-        response_text = request_to_openai(recognized_text, user_settings=message__user_settings[1].api_key)
+        response_text = request_to_openai(_text="Hi, DaVinchi! Say anything for test my program.", user_settings=message__user_settings)
         logger.info('Got response')
 
         # tts_response = text_to_speech_coqui(response_text)
         # tts_response = text_to_speech_google(response_text)
         logger.info('TTS is passed')
 
+        strt_time = time.monotonic()
         async def send_replay():
             bot = Bot(token=TELEGRAM_BOT_TOKEN)
             async with bot:
@@ -139,7 +165,7 @@ def voice_engine() -> None:
                 )
 
         asyncio.run(send_replay())
-
+        print(time.monotonic() - strt_time)
 
 thread_engine = threading.Thread(target=voice_engine, daemon=True).start()
 
