@@ -1,9 +1,8 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 from io import BytesIO
-import asyncio
 
-from lesa_bot.engine.engine import queue
+from lesa_bot.engine.engine import hand_over_queue, thread_engine
 from lesa_bot.db import get_user
 
 import logging
@@ -28,6 +27,7 @@ async def voice_text_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
     #  hand over data to engine through queue
     message__user_settings = (audio_stream, user_settings, )
-    queue.put(message__user_settings)
+    hand_over_queue.put(message__user_settings)
+
 
 

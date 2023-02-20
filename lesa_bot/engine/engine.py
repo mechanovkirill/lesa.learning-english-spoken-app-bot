@@ -2,6 +2,8 @@ import asyncio
 import threading
 import time
 from queue import Queue
+
+import telegram
 from func_timeout import func_timeout, FunctionTimedOut
 
 import requests
@@ -12,10 +14,10 @@ from TTS.utils.synthesizer import Synthesizer
 from gtts import gTTS
 from io import BytesIO
 from lesa_bot.db import BotUserClass
-from telegram import Bot
 from lesa_bot.config import TELEGRAM_BOT_TOKEN
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -35,13 +37,21 @@ def speech_recognition(speech: BytesIO) -> str:
         audio_text = r.record(source)
     logger.info('Converted to flac')
 
+    # using google speech recognition
+    def recognition(audio):
+        text = r.recognize_google(audio_data=audio)
+        logger.info(f"Speech Recognition Text: {text}")
+        return text
+
     try:
-        # using google speech recognition
-        text = r.recognize_google(audio_text)
-        print("Speech Recognition Text:", text)
+        text = func_timeout(timeout=5, func=recognition, kwargs=dict(audio=audio_text))
     except FunctionTimedOut:
-        print("Sorry, I did not get that")
-        text = ""
+        return audio_text
+    if audio_text:
+        try:
+            text = func_timeout(timeout=7, func=recognition, kwargs=dict(audio=audio_text))
+        except FunctionTimedOut:
+            text = ""
 
     return text
 
@@ -53,16 +63,16 @@ def request_to_openai(_text: str, user_settings: tuple[BytesIO, BotUserClass]) -
     if user_settings[1].mode == 1:
         print(user_settings[1].mode)
         mode = {
-        "model": "text-davinci-003",
-        "prompt": "This message will consist of 3 texts."
-                  f"1. {_text} "
-                  "2. What mistakes are made in the text 1? "
-                  "3. If text 1 does not contain a question"
-                  "ask a question to keep the conversation going."
-                  "Don't repeat numbers and instructions",
-        "max_tokens": 100,
-        "temperature": 0.7,
-    }
+            "model": "text-davinci-003",
+            "prompt": "This message will consist of 3 texts."
+                      f"1. {_text} "
+                      "2. What mistakes are made in the text 1? "
+                      "3. If text 1 does not contain a question"
+                      "ask a question to keep the conversation going."
+                      "Don't repeat numbers and instructions",
+            "max_tokens": 100,
+            "temperature": 0.7,
+        }
     else:
         mode = {
             "model": "text-davinci-003",
@@ -75,7 +85,7 @@ def request_to_openai(_text: str, user_settings: tuple[BytesIO, BotUserClass]) -
     response = requests.post(openai_endpoint, headers={
         "Content-Type": "application/json",
         "Authorization": f"Bearer {user_settings[1].api_key}"
-    }, json=mode)
+    }, json=mode, timeout=5)
 
     # Get the response from the OpenAI API
     try:
@@ -83,6 +93,7 @@ def request_to_openai(_text: str, user_settings: tuple[BytesIO, BotUserClass]) -
     except:
         if response.json():
             response_text = response.json()
+            return f'Unable to recognize text, server response: {response_text}'
         response_text = "Sorry, no response received."
 
     print("OpenAI API Response:", response_text)
@@ -119,7 +130,29 @@ def text_to_speech_google(text_: str) -> BytesIO:
     return answer
 
 
-queue = Queue()
+def send_text_msg(chat_id: int, text: str) -> None:
+    strt = time.monotonic()
+    token = TELEGRAM_BOT_TOKEN
+    url = "https://api.telegram.org/bot" + token + "/sendMessage" + "?chat_id=" + str(chat_id) + "&text=" + text
+    try:
+        response = requests.get(url, timeout=5)
+        logger.info(f'Sent for {time.monotonic() - strt}')
+    except requests.exceptions.HTTPError as err:
+        print('Error fetching response using requests')
+
+
+def send_voice_msg(chat_id: int, voice_file: BytesIO) -> None:
+    token = TELEGRAM_BOT_TOKEN
+    url = "https://api.telegram.org/bot" + token + "/sendVoice" + "?chat_id=" + str(chat_id) + "&voice="
+    file = {'voice': ('voice.ogg', voice_file)}
+    try:
+        post = requests.post(url, files=file, timeout=3)
+        logger.info(f'voice message status code is {post.status_code}')
+    except requests.exceptions.HTTPError as err:
+        logger.warning('Error fetching response using requests')
+
+
+hand_over_queue = Queue()
 
 
 def voice_engine() -> None:
@@ -128,45 +161,35 @@ def voice_engine() -> None:
     logger.info(f'{threading.current_thread()}')
 
     while True:
-        message__user_settings = queue.get()
-        print(message__user_settings)
-        # if message__user_settings[0] is BytesIO:
-        wav_voice = take_and_convert_to_wav(message__user_settings[0])
-        logger.info('Converting to wav passed')
+        message__user_settings = hand_over_queue.get()
 
-        recognized_text = None
-        try:
-            recognized_text = func_timeout(timeout=1, func=speech_recognition, kwargs=dict(speech=wav_voice))
+        user_id: int = message__user_settings[1].telegram_id
+
+        if isinstance(message__user_settings[0], BytesIO):
+            wav_voice = take_and_convert_to_wav(message__user_settings[0])
+            logger.info('Converting to wav passed')
+
+            recognized_text = speech_recognition(wav_voice)
             logger.info('recognized_text passed')
-            print(recognized_text)
-        except FunctionTimedOut:
-            print('speech_recognition time out!')
-            try:
-                recognized_text = func_timeout(timeout=6, func=speech_recognition, kwargs=dict(speech=wav_voice))
-                logger.info('recognized_text passed')
-                print(recognized_text)
-            except FunctionTimedOut:
-                print('The second speech_recognition time out!')
 
-        response_text = request_to_openai(_text="Hi, DaVinchi! Say anything for test my program.", user_settings=message__user_settings)
-        logger.info('Got response')
+            response_text = request_to_openai(
+                _text="Hi, DaVinchi! Say anything for test my program.", user_settings=message__user_settings
+            )
+            logger.info('Got response')
 
-        # tts_response = text_to_speech_coqui(response_text)
-        # tts_response = text_to_speech_google(response_text)
-        logger.info('TTS is passed')
+            tts_response = text_to_speech_coqui(response_text)
+            # tts_response = text_to_speech_google(response_text)
+            logger.info('TTS is passed')
 
-        strt_time = time.monotonic()
-        async def send_replay():
-            bot = Bot(token=TELEGRAM_BOT_TOKEN)
-            async with bot:
-                await bot.send_message(
-                    chat_id=message__user_settings[1].telegram_id,
-                    text=response_text
-                )
+            answer_text = f'You:\n  {recognized_text}\n\nLESA:{response_text}'
+            send_text_msg(text=answer_text, chat_id=user_id)
 
-        asyncio.run(send_replay())
-        print(time.monotonic() - strt_time)
+            async def bot():
+                bot = telegram.Bot(TELEGRAM_BOT_TOKEN)
+                async with bot:
+                    await bot.send_voice(chat_id=user_id, voice=tts_response)
+
+            asyncio.run(bot())
+
 
 thread_engine = threading.Thread(target=voice_engine, daemon=True).start()
-
-
