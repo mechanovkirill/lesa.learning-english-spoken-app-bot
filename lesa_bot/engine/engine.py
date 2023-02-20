@@ -85,7 +85,7 @@ def request_to_openai(_text: str, user_settings: tuple[BytesIO, BotUserClass]) -
     response = requests.post(openai_endpoint, headers={
         "Content-Type": "application/json",
         "Authorization": f"Bearer {user_settings[1].api_key}"
-    }, json=mode, timeout=5)
+    }, json=mode, timeout=6)
 
     # Get the response from the OpenAI API
     try:
@@ -94,9 +94,9 @@ def request_to_openai(_text: str, user_settings: tuple[BytesIO, BotUserClass]) -
         if response.json():
             response_text = response.json()
             return f'Unable to recognize text, server response: {response_text}'
-        response_text = "Sorry, no response received."
+        response_text = "Sorry, no response received. Make sure you have a valid OpenAI API key."
 
-    print("OpenAI API Response:", response_text)
+    logger.info(f"OpenAI API Response: {response_text}")
 
     return response_text
 
@@ -173,7 +173,7 @@ def voice_engine() -> None:
             logger.info('recognized_text passed')
 
             response_text = request_to_openai(
-                _text="Hi, DaVinchi! Say anything for test my program.", user_settings=message__user_settings
+                _text=recognized_text, user_settings=message__user_settings
             )
             logger.info('Got response')
 
@@ -190,6 +190,9 @@ def voice_engine() -> None:
                     await bot.send_voice(chat_id=user_id, voice=tts_response)
 
             asyncio.run(bot())
+
+        if isinstance(message__user_settings[0], str):
+            send_text_msg(chat_id=user_id, text='This is a text!')
 
 
 thread_engine = threading.Thread(target=voice_engine, daemon=True).start()

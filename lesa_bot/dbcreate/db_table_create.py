@@ -19,11 +19,11 @@ class BotUser(Base):
 
     telegram_id: Mapped[int] = Column(BigInteger, primary_key=True)
     api_key: Mapped[str] = Column(String(80), nullable=True)
-    show_recognized_text: Mapped[int]
-    show_text_answer: Mapped[int]
+    show_text: Mapped[int]
     tts_engine: Mapped[int]
     stt_engine: Mapped[int]
     mode: Mapped[int]
+    payed: Mapped[bool]
     create_date: Mapped[datetime.datetime] = mapped_column(server_default=func.now())
 
 
@@ -47,4 +47,3 @@ async def async_main() -> None:
 
 asyncio.run(async_main())
 
-async_main()

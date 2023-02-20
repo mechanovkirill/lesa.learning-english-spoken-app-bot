@@ -6,11 +6,10 @@ from lesa_bot.db import (
     BotUserClass,
     add_user,
     set_key,
-    set_show_recognized_text,
     set_mode,
     set_stt_engine,
     set_tts_engine,
-    set_show_text_answer
+    set_text_display
 )
 
 import logging
@@ -36,11 +35,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         user = BotUserClass(
             telegram_id=user_id,
             api_key=None,
-            show_recognized_text=1,
-            show_text_answer=1,
+            show_text=1,
             tts_engine=1,
             stt_engine=1,
             mode=1,
+            payed=False,
             create_date=None
         )
         await add_user(user)
@@ -55,7 +54,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     )
 
 
-start_handler = CommandHandler('start', start)
+start_handler = CommandHandler(('start', 'help'), start)
 
 
 # setkey--------------------------------------------------------------------------------------------------------
@@ -86,7 +85,7 @@ async def get_and_set_key(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 setkey_conversation_handler = ConversationHandler(
-    entry_points=[CommandHandler("setkey", setkey)],
+    entry_points=[CommandHandler("set_key", setkey)],
     states={
         0: [CommandHandler("cancel", cancel), MessageHandler(filters.TEXT, get_and_set_key)],
     },
@@ -94,8 +93,8 @@ setkey_conversation_handler = ConversationHandler(
 )
 
 
-#  set_spech_recogn_option ------------------------------------------------------------------------------------------
-async def set_show_rt_option(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+#  set_text_display_option ------------------------------------------------------------------------------------------
+async def set_text_display_option(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """/srt Set the option to show messages with recognized text or not"""
     user_id = update.effective_user.id
     if not await check_user_exist(user_id):
@@ -104,80 +103,37 @@ async def set_show_rt_option(update: Update, context: ContextTypes.DEFAULT_TYPE)
         return ConversationHandler.END
 
     await context.bot.send_message(
-        chat_id=update.effective_chat.id, text=messages.SET_SRT_MESSAGE
+        chat_id=update.effective_chat.id, text=messages.SET_TEXT_DISPLAY
     )
 
     return 0
 
 
-async def get_and_set_srt_value(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def get_and_set_td_value(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     value = update.message.text
     if value.isnumeric():
         value = int(value)
-        if value != 1 and value != 0:
-            await update.message.reply_text(messages.WRONG_DATA)
-        else:
+        if 0 <= value <= 3:
             user_id = update.message.from_user.id
-            await set_show_recognized_text(telegram_id=user_id, value=value)
+            await set_text_display(telegram_id=user_id, value=value)
 
             await update.message.reply_text(
                 "The data has been received and stored."
             )
 
             return ConversationHandler.END
-
-    else:
-        await update.message.reply_text(messages.WRONG_DATA)
-
-
-srt_conversation_handler = ConversationHandler(
-    entry_points=[CommandHandler("srt", set_show_rt_option)],
-    states={
-        0: [CommandHandler("cancel", cancel), MessageHandler(filters.TEXT, get_and_set_srt_value)],
-    },
-    fallbacks=[CommandHandler("cancel", cancel)],
-)
-
-
-#  sta --------------------------------------------------------------------------------------------------------------
-async def set_show_ta_option(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    user_id = update.effective_user.id
-    if not await check_user_exist(user_id):
-        await update.message.reply_text(messages.ACCAUNT_IS_NOT_EXIST)
-
-        return ConversationHandler.END
-
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id, text=messages.SET_STA_MESSAGE
-    )
-
-    return 0
-
-
-async def get_and_set_ta_value(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    value = update.message.text
-    if value.isnumeric():
-        value = int(value)
-        if value != 1 and value != 0:
-            await update.message.reply_text(messages.WRONG_DATA)
         else:
-            user_id = update.message.from_user.id
-            await set_show_text_answer(telegram_id=user_id, value=value)
+            await update.message.reply_text(messages.WRONG_DATA)
 
-            await update.message.reply_text(
-                "The data has been received and stored."
-            )
-
-            return ConversationHandler.END
 
     else:
         await update.message.reply_text(messages.WRONG_DATA)
 
 
-sta_conversation_handler = ConversationHandler(
-    entry_points=[CommandHandler("sta", set_show_ta_option)],
+std_conversation_handler = ConversationHandler(
+    entry_points=[CommandHandler("set_td", set_text_display_option)],
     states={
-        0: [CommandHandler("cancel", cancel), MessageHandler(filters.TEXT, get_and_set_ta_value)],
+        0: [CommandHandler("cancel", cancel), MessageHandler(filters.TEXT, get_and_set_td_value)],
     },
     fallbacks=[CommandHandler("cancel", cancel)],
 )
@@ -202,9 +158,7 @@ async def get_and_set_tts_value(update: Update, context: ContextTypes.DEFAULT_TY
     value = update.message.text
     if value.isnumeric():
         value = int(value)
-        if value != 1 and value != 0:
-            await update.message.reply_text(messages.WRONG_DATA)
-        else:
+        if 0 <= value <= 3:
             user_id = update.message.from_user.id
             await set_tts_engine(telegram_id=user_id, value=value)
 
@@ -213,13 +167,15 @@ async def get_and_set_tts_value(update: Update, context: ContextTypes.DEFAULT_TY
             )
 
             return ConversationHandler.END
+        else:
+            await update.message.reply_text(messages.WRONG_DATA)
 
     else:
         await update.message.reply_text(messages.WRONG_DATA)
 
 
 tts_conversation_handler = ConversationHandler(
-    entry_points=[CommandHandler("tts", set_tts)],
+    entry_points=[CommandHandler("set_tts", set_tts)],
     states={
         0: [CommandHandler("cancel", cancel), MessageHandler(filters.TEXT, get_and_set_tts_value)],
     },
@@ -271,7 +227,6 @@ stt_conversation_handler = ConversationHandler(
 )
 
 
-
 # mode --------------------------------------------------------------------------------------------------------------
 async def set_mode_(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user_id = update.effective_user.id
@@ -308,22 +263,17 @@ async def get_and_set_mode_value(update: Update, context: ContextTypes.DEFAULT_T
 
 
 mode_conversation_handler = ConversationHandler(
-    entry_points=[CommandHandler("setmode", set_mode_)],
+    entry_points=[CommandHandler("set_mode", set_mode_)],
     states={
         0: [CommandHandler("cancel", cancel), MessageHandler(filters.TEXT, get_and_set_mode_value)],
     },
     fallbacks=[CommandHandler("cancel", cancel)],
 )
 
-
 all_command_handlers = (
     start_handler,
     setkey_conversation_handler,
-    srt_conversation_handler,
-    sta_conversation_handler,
+    std_conversation_handler,
     tts_conversation_handler,
-    stt_conversation_handler,
     mode_conversation_handler
 )
-
-
