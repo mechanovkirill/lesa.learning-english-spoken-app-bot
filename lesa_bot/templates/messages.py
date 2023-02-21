@@ -74,3 +74,5 @@ an OpenAI API key, or your account settings are missing. You can get the OpenAI 
 at the link https://platform.openai.com/account/api-keys 
 You can use the /help command for more information, or you can use the /set_key command to save OpenAI API key.
     """
+
+HAVENOT_RECOGNIZED_TEXT = """Sorry, the speech recognition service could not recognize your speech or did not respond for a long time and recognition was stopped. Try again."""
