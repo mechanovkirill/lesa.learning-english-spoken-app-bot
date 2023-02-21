@@ -69,3 +69,8 @@ SET_MODE_MESSAGE = """
 По умолчанию установлена опция 1
 """
 
+HAVENOT_SETTINGS = """I'm sorry, but your account does not have 
+an OpenAI API key, or your account settings are missing. You can get the OpenAI Key for free by registering 
+at the link https://platform.openai.com/account/api-keys 
+You can use the /help command for more information, or you can use the /set_key command to save OpenAI API key.
+    """

@@ -48,7 +48,7 @@ def speech_recognition(speech: BytesIO) -> str:
 
     recognized_text = None
     try:
-        recognized_text = func_timeout(timeout=10, func=recognition, kwargs=dict(audio=audio_text, recognizer=r))
+        recognized_text = func_timeout(timeout=20, func=recognition, kwargs=dict(audio=audio_text, recognizer=r))
         return recognized_text
     except FunctionTimedOut:
         logger.warning('The recognition timeout')
@@ -84,10 +84,14 @@ def request_to_openai(_text: str, _user_settings: BotUserClass) -> str:
         }
 
     # Send the text to the OpenAI API
-    response = requests.post(openai_endpoint, headers={
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {_user_settings.api_key}"
-    }, json=mode, timeout=6)
+    try:
+        response = requests.post(openai_endpoint, headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {_user_settings.api_key}"
+        }, json=mode, timeout=12)
+    except FunctionTimedOut:
+        response_text = ''
+        return response_text
 
     # Get the response from the OpenAI API
     try:
@@ -107,29 +111,34 @@ def request_to_openai(_text: str, _user_settings: BotUserClass) -> str:
 
 def send_msg_depending_user_settg(
         _user_settings: BotUserClass, _recognized_text: str | None, _response_text: str
-) -> None:
+) -> str | None:
+    answer_text = None
     if _recognized_text:
         if _user_settings.show_text == 1:
             answer_text = f'You:\n  {_recognized_text}\n\nLESA:{_response_text}'
-            send_text_msg(text=answer_text, chat_id=_user_settings.telegram_id)
+            return answer_text
+            # send_text_msg(text=answer_text, chat_id=_user_settings.telegram_id)
         elif _user_settings.show_text == 2:
             answer_text = f'LESA:{_response_text}'
-            send_text_msg(text=answer_text, chat_id=_user_settings.telegram_id)
+            return answer_text
+            # send_text_msg(text=answer_text, chat_id=_user_settings.telegram_id)
         elif _user_settings.show_text == 3:
             answer_text = f'You:\n  {_recognized_text}'
-            send_text_msg(text=answer_text, chat_id=_user_settings.telegram_id)
+            return answer_text
+            # send_text_msg(text=answer_text, chat_id=_user_settings.telegram_id)
         else:
-            pass
+            return answer_text
     else:
         if _user_settings.show_text != 0:
             answer_text = f'LESA:{_response_text}'
-            send_text_msg(text=answer_text, chat_id=_user_settings.telegram_id)
+            return answer_text
+            # send_text_msg(text=answer_text, chat_id=_user_settings.telegram_id)
         else:
-            pass
+            return answer_text
 
 
 #  -------------------------------------------------------------------------------------------------------------------
-def text_to_speech_coqui(text_: str) -> BytesIO:
+def text_to_speech_coqui(text: str) -> BytesIO:
     path = "/home/certo/lesa/venv/lib/python3.10/site-packages/TTS/.models.json"
     model_manager = ModelManager(path)
     model_path, config_path, model_item = model_manager.download_model("tts_models/en/ljspeech/tacotron2-DDC")
@@ -142,16 +151,16 @@ def text_to_speech_coqui(text_: str) -> BytesIO:
         vocoder_config=voc_config_path
     )
 
-    outputs = syn.tts(text_)
+    outputs = syn.tts(text)
     answer = BytesIO()
     syn.save_wav(outputs, answer)
     return answer
 
 
-def text_to_speech_google(text_: str) -> BytesIO:
+def text_to_speech_google(text: str) -> BytesIO:
     answer = BytesIO()
     print('into gtts')
-    gTTS(text=text_, lang='en').write_to_fp(answer)
+    gTTS(text=text, lang='en').write_to_fp(answer)
     print('pass gtts')
     answer.seek(0)
     return answer
@@ -161,13 +170,14 @@ def tts_depending_user_settings(_user_settings: BotUserClass, text: str) -> Byte
     if _user_settings.tts_engine == 1:
         tts_response = None
         try:
-            tts_response = func_timeout(8, text_to_speech_coqui, text)
+            print(text)
+            tts_response = func_timeout(12, text_to_speech_coqui, kwargs=dict(text=text))
             return tts_response
         except FunctionTimedOut:
             logger.info('text_to_speech_coqui first time out!')
         if not tts_response:
             try:
-                tts_response = func_timeout(8, text_to_speech_coqui, text)
+                tts_response = func_timeout(10, text_to_speech_coqui, kwargs=dict(text=text))
                 return tts_response
             except FunctionTimedOut:
                 logger.info('text_to_speech_coqui second time out!')
@@ -176,13 +186,13 @@ def tts_depending_user_settings(_user_settings: BotUserClass, text: str) -> Byte
     elif _user_settings.tts_engine == 2:
         tts_response = None
         try:
-            tts_response = func_timeout(8, text_to_speech_google, text)
+            tts_response = func_timeout(10, text_to_speech_google, kwargs=dict(text=text))
             return tts_response
         except FunctionTimedOut:
             logger.info('text_to_speech_google first time out!')
         if not tts_response:
             try:
-                tts_response = func_timeout(8, text_to_speech_google, text)
+                tts_response = func_timeout(10, text_to_speech_google, kwargs=dict(text=text))
                 return tts_response
             except FunctionTimedOut:
                 logger.info('text_to_speech_google second time out!')
@@ -191,13 +201,13 @@ def tts_depending_user_settings(_user_settings: BotUserClass, text: str) -> Byte
     elif _user_settings.tts_engine == 3:
         tts_response = None
         try:
-            tts_response = func_timeout(8, text_to_speech_coqui, text)
+            tts_response = func_timeout(12, text_to_speech_coqui, kwargs=dict(text=text))
             return tts_response
         except FunctionTimedOut:
             logger.info('option 3 text_to_speech_coqui time out!')
         if not tts_response:
             try:
-                tts_response = func_timeout(8, text_to_speech_google, text)
+                tts_response = func_timeout(10, text_to_speech_google, kwargs=dict(text=text))
                 return tts_response
             except FunctionTimedOut:
                 logger.info('option 3 text_to_speech_coqui first time out!')
@@ -206,13 +216,13 @@ def tts_depending_user_settings(_user_settings: BotUserClass, text: str) -> Byte
     elif _user_settings.tts_engine == 4:
         tts_response = None
         try:
-            tts_response = func_timeout(8, text_to_speech_google, text)
+            tts_response = func_timeout(10, text_to_speech_google, kwargs=dict(text=text))
             return tts_response
         except FunctionTimedOut:
             logger.info('option 3 text_to_speech_coqui time out!')
         if not tts_response:
             try:
-                tts_response = func_timeout(8, text_to_speech_coqui, text)
+                tts_response = func_timeout(12, text_to_speech_coqui, kwargs=dict(text=text))
                 return tts_response
             except FunctionTimedOut:
                 logger.info('option 3 text_to_speech_coqui first time out!')
@@ -249,10 +259,8 @@ def send_voice_msg(chat_id: int, voice_file: BytesIO) -> None:
 hand_over_queue = Queue()
 
 
-def voice_engine() -> None:
+def engine() -> None:
     logger.info('Into engine')
-    logger.info(f'{threading.active_count()}')
-    logger.info(f'{threading.current_thread()}')
 
     while True:
         # get data
@@ -269,7 +277,10 @@ def voice_engine() -> None:
             # recognition
             recognized_text = speech_recognition(wav_voice)
             if not recognized_text:
-                send_text_msg(chat_id=user_id, text="I'm sorry, I couldn't understand your speech. Try again.")
+                send_text_msg(chat_id=user_id, text="Sorry, the speech recognition service could not recognize your "
+                                                    "speech or did not respond for a long time and recognition "
+                                                    "was stopped. Try again."
+                              )
                 continue
             logger.info('recognized_text passed')
 
@@ -279,33 +290,37 @@ def voice_engine() -> None:
             )
             logger.info('Got response')
 
-            # send text if it in settings
-            send_msg_depending_user_settg(user_settings, recognized_text, response_text)
+            text_answer = send_msg_depending_user_settg(
+                _user_settings=user_settings,
+                _response_text=response_text,
+                _recognized_text=recognized_text)
 
             # tts if it in settings
             tts_response = tts_depending_user_settings(_user_settings=user_settings, text=response_text)
             logger.info('TTS is passed')
 
-            if tts_response:
-                async def bot():
-                    bot = telegram.Bot(TELEGRAM_BOT_TOKEN)
-                    async with bot:
+            start_t = time.monotonic()
+
+            async def bot():
+                bot = telegram.Bot(TELEGRAM_BOT_TOKEN)
+                async with bot:
+                    if text_answer:
+                        await bot.send_message(chat_id=user_id, text=text_answer)
+                    if tts_response:
                         await bot.send_voice(chat_id=user_id, voice=tts_response)
 
-                asyncio.run(bot())
+            asyncio.run(bot())
+            logger.info(f'Sent by bot at {time.monotonic() - start_t}')
 
         if isinstance(message, str):
             # request to and response from OpenAI API
-            logger.info(f'message: {message}')
-            logger.info(f'message: {user_settings}')
-
             response_text = request_to_openai(
                 _text=message, _user_settings=user_settings
             )
-            logger.info('Got response')
+            logger.info(f'Got response: {response_text}')
 
             # send text if it in settings
-            send_msg_depending_user_settg(
+            text_answer = send_msg_depending_user_settg(
                 _user_settings=user_settings,
                 _response_text=response_text,
                 _recognized_text=None)
@@ -314,11 +329,26 @@ def voice_engine() -> None:
             tts_response = tts_depending_user_settings(_user_settings=user_settings, text=response_text)
             logger.info('TTS is passed')
 
-            if tts_response:
-                async def bot():
-                    bot = telegram.Bot(TELEGRAM_BOT_TOKEN)
-                    async with bot:
+            start_t = time.monotonic()
+
+            async def bot():
+                bot = telegram.Bot(TELEGRAM_BOT_TOKEN)
+                async with bot:
+                    if text_answer:
+                        await bot.send_message(chat_id=user_id, text=text_answer)
+                    if tts_response:
                         await bot.send_voice(chat_id=user_id, voice=tts_response)
 
+            asyncio.run(bot())
+            logger.info(f'Sent by bot at {time.monotonic() - start_t}')
 
-thread_engine = threading.Thread(target=voice_engine, daemon=True).start()
+
+# def run_engine():
+#     while True:
+#         try:
+#             engine()
+#         except:
+#             time.sleep(1)
+
+
+engine_thread = threading.Thread(target=engine, daemon=True, name='engine_thread').start()

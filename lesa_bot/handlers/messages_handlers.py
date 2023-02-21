@@ -4,27 +4,23 @@ from io import BytesIO
 
 from lesa_bot.engine.engine import hand_over_queue
 from lesa_bot.db import get_user
+from lesa_bot.templates.messages import HAVENOT_SETTINGS
 
 import logging
 logger = logging.getLogger(__name__)
 
 
 async def voice_text_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handler. It is receives and transmits users settings from database, voice and text messages from users
+    """Receives and transmits users settings from database, voice and text messages from users
     to engine."""
     user = update.message.from_user
     logger.info("%s: %s", user.username, "voice_answer start")
 
     bot = context.bot
 
-    # get data from database
     user_settings = await get_user(user.id)
-    if not user_settings or not user_settings.api_key:
-        await bot.send_message(chat_id=update.effective_chat.id, text="""I'm sorry, but your account does not have 
-an OpenAI API key, or your account settings are missing. You can get the OpenAI Key for free by registering 
-at the link https://platform.openai.com/account/api-keys 
-You can use the /help command for more information, or you can use the /set_key command to save OpenAI API key.
-    """)
+    if not user_settings.api_key:
+        await bot.send_message(chat_id=update.effective_chat.id, text=HAVENOT_SETTINGS)
     else:
         # checking data
         if update.message.voice:
