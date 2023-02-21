@@ -158,7 +158,7 @@ async def get_and_set_tts_value(update: Update, context: ContextTypes.DEFAULT_TY
     value = update.message.text
     if value.isnumeric():
         value = int(value)
-        if 0 <= value <= 3:
+        if 0 <= value <= 4:
             user_id = update.message.from_user.id
             await set_tts_engine(telegram_id=user_id, value=value)
 
