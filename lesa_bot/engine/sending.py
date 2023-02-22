@@ -11,6 +11,34 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def send_via_bot(_user_id: int, content: tuple) -> None:
+    start_t = time.monotonic()
+
+    async def bot():
+        try:
+            bot_ = telegram.Bot(TELEGRAM_BOT_TOKEN)
+            async with bot_:
+                for i in content:
+                    if isinstance(i, str):
+                        await bot_.send_message(chat_id=_user_id, text=i)
+                    if isinstance(i, BytesIO):
+                        await bot_.send_voice(chat_id=_user_id, voice=i)
+        except telegram.error.TelegramError:
+            try:
+                bot_ = telegram.Bot(TELEGRAM_BOT_TOKEN)
+                async with bot:
+                    for i in content:
+                        if isinstance(i, str):
+                            await bot_.send_message(chat_id=_user_id, text=i)
+                        if isinstance(i, BytesIO):
+                            await bot_.send_voice(chat_id=_user_id, voice=i)
+            except telegram.error.TelegramError as exc:
+                logger.warning(f"Sanding error. {exc.message}")
+
+    asyncio.run(bot())
+    logger.info(f'Sent by bot at {time.monotonic() - start_t}')
+
+
 def send_text_msg(chat_id: int, text: str) -> None:
     strt = time.monotonic()
     token = TELEGRAM_BOT_TOKEN
@@ -32,18 +60,3 @@ def send_voice_msg(chat_id: int, voice_file: BytesIO) -> None:
     except requests.exceptions.HTTPError as err:
         logger.warning('Error fetching response using requests')
 
-
-def send_with_bot(_user_id: int, content: tuple) -> None:
-    start_t = time.monotonic()
-
-    async def bot():
-        bot = telegram.Bot(TELEGRAM_BOT_TOKEN)
-        async with bot:
-            for i in content:
-                if isinstance(i, str):
-                    await bot.send_message(chat_id=_user_id, text=i)
-                if isinstance(i, BytesIO):
-                    await bot.send_voice(chat_id=_user_id, voice=i)
-
-    asyncio.run(bot())
-    logger.info(f'Sent by bot at {time.monotonic() - start_t}')

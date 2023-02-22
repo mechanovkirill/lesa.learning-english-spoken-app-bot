@@ -10,11 +10,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-async def voice_text_answer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def hand_over_voice_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Receives and transmits users settings from database, voice and text messages from users
     to engine."""
     user = update.message.from_user
-    logger.info("%s: %s", user.username, "voice_answer start")
+    logger.info("%s: %s", user.username, "Income message got")
 
     bot = context.bot
 

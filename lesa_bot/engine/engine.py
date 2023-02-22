@@ -3,7 +3,7 @@ from queue import Queue
 from lesa_bot.engine.speech_recognition_ import speech_recognition, take_and_convert_to_wav
 from lesa_bot.engine.request_openai import request_to_openai, send_msg_depending_user_settg
 from lesa_bot.engine.tts import tts_depending_user_settings
-from lesa_bot.engine.sending import send_with_bot
+from lesa_bot.engine.sending import send_via_bot
 
 from io import BytesIO
 from lesa_bot.db import BotUserClass
@@ -37,7 +37,7 @@ def engine() -> None:
             # recognition
             recognized_text = speech_recognition(wav_voice)
             if not recognized_text:
-                send_with_bot(user_id, (HAVENOT_RECOGNIZED_TEXT, ))
+                send_via_bot(user_id, (HAVENOT_RECOGNIZED_TEXT,))
                 continue
             logger.info('recognized_text passed')
 
@@ -58,7 +58,7 @@ def engine() -> None:
             logger.info('TTS is passed')
 
             #  send
-            send_with_bot(user_id, (text_answer, tts_response))
+            send_via_bot(user_id, (text_answer, tts_response))
 
         if isinstance(message, str):
             # request to and response from OpenAI API
@@ -78,7 +78,7 @@ def engine() -> None:
             logger.info('TTS is passed')
 
             #  send
-            send_with_bot(user_id, (text_answer, tts_response))
+            send_via_bot(user_id, (text_answer, tts_response))
 
 # def run_engine():
 #     while True:
