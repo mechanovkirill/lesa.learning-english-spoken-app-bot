@@ -17,7 +17,7 @@ def request_to_openai(_text: str, _user_settings: BotUserClass) -> str:
             "model": "text-davinci-003",
             "prompt": "This message will consist of 3 texts:"
                       f"1 {_text} "
-                      "2 What mistakes are made in the text 1 if text 1 exist?"
+                      "2 What mistakes are made in the text 1 if text 1 is exist?"
                       "3 If text 1 does not contain a question"
                       "ask a question to keep the conversation going."
                       "If text 1 exists and contains a question, answer the question and continue the conversation."

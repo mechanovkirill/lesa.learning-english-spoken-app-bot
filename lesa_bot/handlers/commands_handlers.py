@@ -131,7 +131,7 @@ async def get_and_set_td_value(update: Update, context: ContextTypes.DEFAULT_TYP
 
 
 std_conversation_handler = ConversationHandler(
-    entry_points=[CommandHandler("set_td", set_text_display_option)],
+    entry_points=[CommandHandler("set_text", set_text_display_option)],
     states={
         0: [CommandHandler("cancel", cancel), MessageHandler(filters.TEXT, get_and_set_td_value)],
     },

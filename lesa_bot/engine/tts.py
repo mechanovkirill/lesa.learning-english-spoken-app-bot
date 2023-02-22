@@ -43,6 +43,43 @@ def tts_depending_user_settings(_user_settings: BotUserClass, text: str) -> Byte
     if _user_settings.tts_engine == 1:
         tts_response = None
         try:
+            tts_response = func_timeout(12, text_to_speech_google, kwargs=dict(text=text))
+            return tts_response
+        except FunctionTimedOut:
+            logger.warning('option 3 text_to_speech_coqui time out!')
+        except AssertionError:
+            logger.warning('text_to_speech_google. No text to speak.')
+        if not tts_response:
+            try:
+                tts_response = func_timeout(12, text_to_speech_coqui, kwargs=dict(text=text))
+                return tts_response
+            except FunctionTimedOut:
+                tts_response = "The text-to-speech request timed out. Failed to convert."
+                logger.warning('option 3 text_to_speech_coqui first time out!')
+                return tts_response
+
+    elif _user_settings.tts_engine == 2:
+        tts_response = None
+        try:
+            tts_response = func_timeout(12, text_to_speech_coqui, kwargs=dict(text=text))
+            return tts_response
+        except FunctionTimedOut:
+            logger.warning('option 3 text_to_speech_coqui time out!')
+        if not tts_response:
+            try:
+                tts_response = func_timeout(12, text_to_speech_google, kwargs=dict(text=text))
+                return tts_response
+            except FunctionTimedOut:
+                tts_response = "The text-to-speech request timed out. Failed to convert."
+                logger.warning('option 3 text_to_speech_coqui first time out!')
+                return tts_response
+            except AssertionError:
+                logger.warning('text_to_speech_google. No text to speak.')
+                return tts_response
+
+    elif _user_settings.tts_engine == 3:
+        tts_response = None
+        try:
             print(text)
             tts_response = func_timeout(12, text_to_speech_coqui, kwargs=dict(text=text))
             return tts_response
@@ -57,7 +94,7 @@ def tts_depending_user_settings(_user_settings: BotUserClass, text: str) -> Byte
                 logger.warning('text_to_speech_coqui second time out!')
                 return tts_response
 
-    elif _user_settings.tts_engine == 2:
+    elif _user_settings.tts_engine == 4:
         tts_response = None
         try:
             tts_response = func_timeout(12, text_to_speech_google, kwargs=dict(text=text))
@@ -77,43 +114,6 @@ def tts_depending_user_settings(_user_settings: BotUserClass, text: str) -> Byte
                 return tts_response
             except AssertionError:
                 logger.warning('text_to_speech_google. No text to speak.')
-                return tts_response
-
-    elif _user_settings.tts_engine == 3:
-        tts_response = None
-        try:
-            tts_response = func_timeout(12, text_to_speech_coqui, kwargs=dict(text=text))
-            return tts_response
-        except FunctionTimedOut:
-            logger.warning('option 3 text_to_speech_coqui time out!')
-        if not tts_response:
-            try:
-                tts_response = func_timeout(12, text_to_speech_google, kwargs=dict(text=text))
-                return tts_response
-            except FunctionTimedOut:
-                tts_response = "The text-to-speech request timed out. Failed to convert."
-                logger.warning('option 3 text_to_speech_coqui first time out!')
-                return tts_response
-            except AssertionError:
-                logger.warning('text_to_speech_google. No text to speak.')
-                return tts_response
-
-    elif _user_settings.tts_engine == 4:
-        tts_response = None
-        try:
-            tts_response = func_timeout(12, text_to_speech_google, kwargs=dict(text=text))
-            return tts_response
-        except FunctionTimedOut:
-            logger.warning('option 3 text_to_speech_coqui time out!')
-        except AssertionError:
-            logger.warning('text_to_speech_google. No text to speak.')
-        if not tts_response:
-            try:
-                tts_response = func_timeout(12, text_to_speech_coqui, kwargs=dict(text=text))
-                return tts_response
-            except FunctionTimedOut:
-                tts_response = "The text-to-speech request timed out. Failed to convert."
-                logger.warning('option 3 text_to_speech_coqui first time out!')
                 return tts_response
 
     else:

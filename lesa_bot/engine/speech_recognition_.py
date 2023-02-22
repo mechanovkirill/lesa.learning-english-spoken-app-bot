@@ -33,7 +33,7 @@ def speech_recognition(speech: BytesIO) -> str:
 
     recognized_text = None
     try:
-        recognized_text = func_timeout(timeout=20, func=recognition, kwargs=dict(audio=audio_text, recognizer=r))
+        recognized_text = func_timeout(timeout=14, func=recognition, kwargs=dict(audio=audio_text, recognizer=r))
         return recognized_text
     except FunctionTimedOut:
         logger.warning('The recognition timeout')
