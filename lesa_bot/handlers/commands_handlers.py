@@ -3,14 +3,13 @@ from telegram.ext import ContextTypes, ConversationHandler, CommandHandler, Mess
 from lesa_bot.templates import messages
 from lesa_bot.db import (
     check_user_exist,
-    BotUserClass,
-    add_user,
     set_key,
     set_mode,
     set_stt_engine,
     set_tts_engine,
     set_text_display
 )
+from lesa_bot.services.handlers_services import check_and_save_user_if_not
 
 import logging
 
@@ -31,28 +30,11 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 #  /start -------------------------------------------------------------------------------------------------------
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_id = update.effective_user.id
-    if not await check_user_exist(user_id):
-        user = BotUserClass(
-            telegram_id=user_id,
-            api_key=None,
-            show_text=1,
-            tts_engine=1,
-            stt_engine=1,
-            mode=1,
-            payed=False,
-            create_date=None
-        )
-        await add_user(user)
 
+    if await check_and_save_user_if_not(user_id):
         await context.bot.send_message(
             chat_id=update.effective_chat.id, text=messages.GREETING_MESSAGE
         )
-        return
-
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id, text=messages.GREETING_MESSAGE
-    )
-
 
 start_handler = CommandHandler(('start', 'help'), start)
 
@@ -124,7 +106,6 @@ async def get_and_set_td_value(update: Update, context: ContextTypes.DEFAULT_TYP
             return ConversationHandler.END
         else:
             await update.message.reply_text(messages.WRONG_DATA)
-
 
     else:
         await update.message.reply_text(messages.WRONG_DATA)
@@ -202,9 +183,7 @@ async def get_and_set_stt_value(update: Update, context: ContextTypes.DEFAULT_TY
     value = update.message.text
     if value.isnumeric():
         value = int(value)
-        if value != 1 and value != 0:
-            await update.message.reply_text(messages.WRONG_DATA)
-        else:
+        if 0 <= value <= 2:
             user_id = update.message.from_user.id
             await set_stt_engine(telegram_id=user_id, value=value)
 
@@ -213,6 +192,8 @@ async def get_and_set_stt_value(update: Update, context: ContextTypes.DEFAULT_TY
             )
 
             return ConversationHandler.END
+        else:
+            await update.message.reply_text(messages.WRONG_DATA)
 
     else:
         await update.message.reply_text(messages.WRONG_DATA)

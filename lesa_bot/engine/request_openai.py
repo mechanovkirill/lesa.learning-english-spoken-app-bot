@@ -1,10 +1,8 @@
-from func_timeout import FunctionTimedOut
-
 import requests
 from lesa_bot.db import BotUserClass
 
 import logging
-
+import traceback
 logger = logging.getLogger(__name__)
 
 
@@ -15,15 +13,11 @@ def request_to_openai(_text: str, _user_settings: BotUserClass) -> str:
     if _user_settings.mode == 1:
         mode = {
             "model": "text-davinci-003",
-            "prompt": "This message will consist of 3 texts:"
-                      f"1 {_text} "
-                      "2 What mistakes are made in the text 1 if text 1 is exist?"
-                      "3 If text 1 does not contain a question"
-                      "ask a question to keep the conversation going."
-                      "If text 1 exists and contains a question, answer the question and continue the conversation."
-                      "Don't repeat numbers and instructions in you replay if it possible.",
-            "max_tokens": 125,
-            "temperature": 0.7,
+            "prompt": f"{_text}" """- answer briefly. 
+            What are the mistakes in the first text above? Ask a question to continue the conversation. 
+            """,
+            "max_tokens": 100,
+            "temperature": 0.5,
         }
     else:
         mode = {
@@ -38,17 +32,18 @@ def request_to_openai(_text: str, _user_settings: BotUserClass) -> str:
         response = requests.post(openai_endpoint, headers={
             "Content-Type": "application/json",
             "Authorization": f"Bearer {_user_settings.api_key}"
-        }, json=mode, timeout=12)
-    except FunctionTimedOut:
-        response_text = ''
+        }, json=mode, timeout=14)
+    except (requests.exceptions.RequestException, Exception):
+        logger.warning(f'Request to OpenAI error{traceback.format_exc()}')
+        response_text = 'Failed to get response from OpenAI'
         return response_text
 
     # Get the response from the OpenAI API
     try:
         response_text = response.json()["choices"][0]["text"]
         return response_text
-    except requests.exceptions.JSONDecodeError:
-        logger.warning("No response from OpenAI")
+    except Exception:
+        logger.warning(f"No response from OpenAI.{traceback.format_exc()}")
         if response.json():
             response_text = response.json()
             return f'Unable to recognize text, server response: {response_text}'

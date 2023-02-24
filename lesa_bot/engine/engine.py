@@ -1,6 +1,7 @@
 import threading
+import traceback
 from queue import Queue
-from lesa_bot.engine.speech_recognition_ import speech_recognition, take_and_convert_to_wav
+from lesa_bot.engine.speech_recognition_ import speech_recognition_depending_set
 from lesa_bot.engine.request_openai import request_to_openai, send_msg_depending_user_settg
 from lesa_bot.engine.tts import tts_depending_user_settings
 from lesa_bot.engine.sending import send_via_bot
@@ -11,7 +12,6 @@ from lesa_bot.templates.messages import HAVENOT_RECOGNIZED_TEXT
 
 
 import logging
-
 logger = logging.getLogger(__name__)
 
 
@@ -31,11 +31,8 @@ def engine() -> None:
 
         #  check data
         if isinstance(message, BytesIO):
-            wav_voice = take_and_convert_to_wav(message)
-            logger.info('Converting to wav passed')
-
-            # recognition
-            recognized_text = speech_recognition(wav_voice)
+            #  recognition
+            recognized_text = speech_recognition_depending_set(user_settings, message)
             if not recognized_text:
                 send_via_bot(user_id, (HAVENOT_RECOGNIZED_TEXT,))
                 continue
@@ -80,12 +77,16 @@ def engine() -> None:
             #  send
             send_via_bot(user_id, (text_answer, tts_response))
 
-# def run_engine():
-#     while True:
-#         try:
-#             engine()
-#         except:
-#             time.sleep(1)
+
+def run_engine():
+    while True:
+        try:
+            engine()
+        except Exception:
+            logger.error(f"engine() was stopped! {traceback.format_exc()}")
 
 
-engine_thread = threading.Thread(target=engine, daemon=True, name='engine_thread').start()
+engine_thread = threading.Thread(target=run_engine, daemon=True, name='engine_thread').start()
+
+
+
