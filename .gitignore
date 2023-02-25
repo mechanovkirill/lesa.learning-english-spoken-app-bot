@@ -7,6 +7,7 @@
 __pycache__
 .DS_Store
 .env
+.env.prod
 db.sqlite3
 general.log
 /drafts

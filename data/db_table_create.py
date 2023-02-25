@@ -30,7 +30,7 @@ class BotUser(Base):
 async def async_main() -> None:
     logger.info("Into async_main")
     engine = create_async_engine(
-        "sqlite+aiosqlite:///../db.sqlite3",
+        f"sqlite+aiosqlite:///db.sqlite3",
         echo=True,
     )
 
