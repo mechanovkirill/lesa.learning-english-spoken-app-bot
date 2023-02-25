@@ -74,7 +74,7 @@ def speech_recognition_vosk(speech: BytesIO) -> str | None:
         logger.warning(F"Audio file must be WAV format mono PCM. SoundFile")
         return
 
-    model = Model(f'{PATH_TO_VOSK_MODEL}')
+    model = Model(PATH_TO_VOSK_MODEL)
     rec = KaldiRecognizer(model, 48000)
     rec.SetMaxAlternatives(10)
     rec.SetWords(True)

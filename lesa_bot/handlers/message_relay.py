@@ -1,16 +1,12 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 from io import BytesIO
-# import sys
-#
-# sys.path.append('./')
 
 from lesa_bot.engine.engine import hand_over_queue
 from lesa_bot.db import get_user
 from lesa_bot.templates.messages import HAVENOT_SETTINGS
 
 import logging
-
 logger = logging.getLogger(__name__)
 
 
@@ -23,9 +19,7 @@ async def hand_over_voice_text(update: Update, context: ContextTypes.DEFAULT_TYP
     bot = context.bot
 
     user_settings = await get_user(user.id)
-    if not user_settings:
-        await bot.send_message(chat_id=update.effective_chat.id, text=HAVENOT_SETTINGS)
-    elif not user_settings.api_key:
+    if not user_settings.api_key:
         await bot.send_message(chat_id=update.effective_chat.id, text=HAVENOT_SETTINGS)
     else:
         # checking data
@@ -37,11 +31,14 @@ async def hand_over_voice_text(update: Update, context: ContextTypes.DEFAULT_TYP
             audio_stream.seek(0)
 
             #  hand over data to engine through queue
-            message__user_settings = (audio_stream, user_settings,)
+            message__user_settings = (audio_stream, user_settings, )
             hand_over_queue.put(message__user_settings)
 
         if update.message.text:
             text = update.message.text
             #  hand over data to engine through queue
-            message__user_settings = (text, user_settings,)
+            message__user_settings = (text, user_settings, )
             hand_over_queue.put(message__user_settings)
+
+
+
