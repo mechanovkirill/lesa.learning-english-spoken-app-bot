@@ -7,10 +7,10 @@ load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY", "")
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
-DATABASE = os.getenv("DATABASE", "")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PATH_TO_VOSK_MODEL = BASE_DIR / "vosk-model-small-en-us-0.15/vosk-model-small-en-us-0.15"
+DATABASE = os.getenv("DATABASE", "")
 
 DATE_FORMAT = "%d.%m.%Y"
 
@@ -28,7 +28,7 @@ LOGGING_CONFIG = {
     'handlers': {
         'default': {
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': 'logs/''general.log',
+            'filename': "general.log",
             'maxBytes': 10000000,
             'backupCount': 20,
             'level': 'WARNING',
