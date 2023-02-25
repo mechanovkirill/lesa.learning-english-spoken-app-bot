@@ -12,9 +12,9 @@ logger = logging.getLogger(__name__)
 
 
 def send_via_bot(_user_id: int, content: tuple) -> None:
-    start_t = time.monotonic()
+    # start_t = time.monotonic()
 
-    async def bot():
+    async def bot() -> None:
         try:
             bot_ = telegram.Bot(TELEGRAM_BOT_TOKEN)
             async with bot_:
@@ -36,16 +36,17 @@ def send_via_bot(_user_id: int, content: tuple) -> None:
                 logger.warning(f"Sanding error. {exc.message}")
 
     asyncio.run(bot())
-    logger.info(f'Sent by bot at {time.monotonic() - start_t}')
+
+    # logger.info(f'Sent by bot at {time.monotonic() - start_t}')
 
 
 def send_text_msg(chat_id: int, text: str) -> None:
-    strt = time.monotonic()
+    # strt = time.monotonic()
     token = TELEGRAM_BOT_TOKEN
     url = "https://api.telegram.org/bot" + token + "/sendMessage" + "?chat_id=" + str(chat_id) + "&text=" + text
     try:
         response = requests.get(url, timeout=5)
-        logger.info(f'Sent for {time.monotonic() - strt}')
+        # logger.info(f'Sent for {time.monotonic() - strt}')
     except requests.exceptions.HTTPError as err:
         print('Error fetching response using requests')
 
