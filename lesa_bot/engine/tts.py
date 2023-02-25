@@ -51,7 +51,7 @@ def tts_depending_user_settings(_user_settings: BotUserClass, text: str) -> Byte
             pass
         if not tts_response:
             try:
-                tts_response = func_timeout(14, text_to_speech_coqui, kwargs=dict(text=text))
+                tts_response = func_timeout(15, text_to_speech_coqui, kwargs=dict(text=text))
                 return tts_response
             except FunctionTimedOut:
                 tts_response = "The text-to-speech request timed out. Failed to convert text to speech."
