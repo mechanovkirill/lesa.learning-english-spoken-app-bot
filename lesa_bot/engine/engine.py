@@ -89,14 +89,4 @@ def run_engine():
 engine_thread = threading.Thread(target=run_engine, daemon=True, name='engine_thread').start()
 
 
-def run_engine2():
-    while True:
-        try:
-            engine()
-        except Exception:
-            logger.error(f"engine() was stopped! {traceback.format_exc()}")
-
-
-engine_thread2 = threading.Thread(target=run_engine2, daemon=True, name='engine_thread2').start()
-
 
