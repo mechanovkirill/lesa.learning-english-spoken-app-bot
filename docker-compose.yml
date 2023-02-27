@@ -4,6 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile_from_base
+      no_cache: true
     volumes:
       - ./data:/data
       - ./log:/logs
