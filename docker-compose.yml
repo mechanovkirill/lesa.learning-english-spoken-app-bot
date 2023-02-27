@@ -5,8 +5,8 @@ services:
       context: .
       dockerfile: Dockerfile_from_base
     volumes:
-      - ./data:/data
-      - ./log:/logs
+      - ./data:/lesa/data
+      - ./log:/lesa/logs
     ports:
       - "8443:8443/tcp"
       - "443:443/tcp"
