@@ -1,13 +1,19 @@
 from __future__ import annotations
 import asyncio
 import datetime
-import logging
+
+from config import DATABASE
+from engine.tts import text_to_speech_coqui
 
 from sqlalchemy import Column, BigInteger, String, func
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 
+
+import logging
 logger = logging.getLogger(__name__)
+
+text_to_speech_coqui('Text for model init')
 
 
 class Base(DeclarativeBase):
@@ -30,7 +36,7 @@ class BotUser(Base):
 async def async_main() -> None:
     logger.info("Into async_main")
     engine = create_async_engine(
-        f"sqlite+aiosqlite:///db.sqlite3",
+        DATABASE,
         echo=True,
     )
 
