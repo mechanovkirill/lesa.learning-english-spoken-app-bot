@@ -1,10 +1,10 @@
 version: '3.8'
 services:
   lesa:
-    build: .
-    ports:
-      - "5000:5000"
+    build:
+      context: .
+      dockerfile: Dockerfile_from_base
     volumes:
-      - ./data:/lesa/data
-      - ./lesa_bot/log:/lesa/lesa_bot/logs
+      - ./data:/data
+      - ./log:/logs
     restart: always
