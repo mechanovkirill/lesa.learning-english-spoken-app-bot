@@ -19,7 +19,7 @@ class BotUserClass:
     telegram_id: int
     api_key: str | None
     show_text: int
-    tts_engine: 0 | 1
+    tts_engine: int
     stt_engine: 0 | 1
     mode: 0 | 1
     payed: bool

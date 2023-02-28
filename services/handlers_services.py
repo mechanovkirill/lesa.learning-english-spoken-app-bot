@@ -11,7 +11,7 @@ async def check_and_save_user_if_not(user_id):
             telegram_id=user_id,
             api_key=None,
             show_text=1,
-            tts_engine=1,
+            tts_engine=25,
             stt_engine=1,
             mode=1,
             payed=False,

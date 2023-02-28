@@ -5,15 +5,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-SECRET_KEY = os.getenv("SECRET_KEY", "")
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 
 BASE_DIR = Path(__file__).resolve().parent
 PATH_TO_VOSK_MODEL = BASE_DIR / "vosk-model-small-en-us-0.15/vosk-model-small-en-us-0.15"
 DATABASE = os.getenv("DATABASE", "")
-
-PATH_TO_TTS_MODEL = "/usr/local/lib/python3.10/site-packages/TTS/.models.json"
-# PATH_TO_TTS_MODEL = "/lesa/venv/lib/python3.10/site-packages/TTS/.models.json"
 
 DATE_FORMAT = "%d.%m.%Y"
 

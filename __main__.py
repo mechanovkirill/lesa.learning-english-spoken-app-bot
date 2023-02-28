@@ -7,7 +7,7 @@ from telegram.ext import (
 )
 
 from config import TELEGRAM_BOT_TOKEN, LOGGING_CONFIG
-from handlers.message_relay import hand_over_voice_text
+from handlers.message_trancemitter import before_hand_over
 from handlers.commands_handlers import all_command_handlers
 
 from db import close_db
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 def main() -> None:
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
-    echo_handler = MessageHandler((filters.VOICE | filters.TEXT) & ~filters.COMMAND, hand_over_voice_text)
+    echo_handler = MessageHandler((filters.VOICE | filters.TEXT) & ~filters.COMMAND, before_hand_over)
 
     for handler in all_command_handlers:
         application.add_handler(handler)

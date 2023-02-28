@@ -3,7 +3,6 @@ import asyncio
 import datetime
 
 from config import DATABASE
-from engine.tts import text_to_speech_coqui
 
 from sqlalchemy import Column, BigInteger, String, func
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -12,8 +11,6 @@ from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 
 import logging
 logger = logging.getLogger(__name__)
-
-text_to_speech_coqui('Text for model init')
 
 
 class Base(DeclarativeBase):

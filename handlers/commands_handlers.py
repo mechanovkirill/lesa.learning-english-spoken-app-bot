@@ -183,7 +183,7 @@ async def get_and_set_stt_value(update: Update, context: ContextTypes.DEFAULT_TY
     value = update.message.text
     if value.isnumeric():
         value = int(value)
-        if 0 <= value <= 2:
+        if 20 <= value <= 60 or value == 0:
             user_id = update.message.from_user.id
             await set_stt_engine(telegram_id=user_id, value=value)
 

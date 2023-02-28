@@ -9,6 +9,13 @@ logger = logging.getLogger(__name__)
 def request_to_openai(_text: str, _user_settings: BotUserClass) -> str:
     """Send text to API and return response"""
     openai_endpoint = "https://api.openai.com/v1/completions"
+    key = _user_settings.api_key
+    if not key:
+        response_text = """
+        OpenAI API key missing :(
+        Please use the /set_key command to save your key, or use the /help command for information.
+        """
+        return response_text
 
     if _user_settings.mode == 1:
         mode = {
@@ -31,7 +38,7 @@ def request_to_openai(_text: str, _user_settings: BotUserClass) -> str:
     try:
         response = requests.post(openai_endpoint, headers={
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {_user_settings.api_key}"
+            "Authorization": f"Bearer {key}"
         }, json=mode, timeout=14)
     except (requests.exceptions.RequestException, Exception):
         logger.warning(f'Request to OpenAI error{traceback.format_exc()}')
