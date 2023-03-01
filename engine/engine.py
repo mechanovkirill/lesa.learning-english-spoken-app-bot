@@ -9,7 +9,7 @@ from engine.sending import send_via_bot
 from io import BytesIO
 from db import BotUserClass
 from templates.messages import HAVENOT_RECOGNIZED_TEXT
-
+from config import THREADS_NUM
 
 import logging
 logger = logging.getLogger(__name__)
@@ -86,17 +86,7 @@ def run_engine():
             logger.error(f"engine() was stopped! {traceback.format_exc()}")
 
 
-engine_thread = threading.Thread(target=run_engine, daemon=True, name='engine_thread').start()
-
-
-def run_engine2():
-    while True:
-        try:
-            engine()
-        except Exception:
-            logger.error(f"engine() was stopped! {traceback.format_exc()}")
-
-
-engine_thread2 = threading.Thread(target=run_engine2, daemon=True, name='engine_thread2').start()
-
-
+threads = []
+for i in range(int(THREADS_NUM)):
+    engine_thread = threading.Thread(target=run_engine, daemon=True, name=f'engine_thread{i}').start()
+    threads.append(engine_thread)

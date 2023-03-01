@@ -3,10 +3,10 @@ services:
   lesa:
     build:
       context: .
-      dockerfile: Dockerfile_from_base
+      dockerfile: Dockerfile
     volumes:
-      - ./data:/lesa/data
-      - ./log:/lesa/logs
+      - ./data:/home/lesa/data
+      - ./log:/home/lesa/logs
     ports:
       - "8443:8443/tcp"
       - "443:443/tcp"

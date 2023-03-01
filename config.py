@@ -15,6 +15,8 @@ DATE_FORMAT = "%d.%m.%Y"
 
 DEBUG = os.getenv("DEBUG", "")
 
+THREADS_NUM = os.getenv("THREADS", "")
+
 LOGGING_CONFIG = {
     'version': 1,
     'disable_existing_loggers': False,
