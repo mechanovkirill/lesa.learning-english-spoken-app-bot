@@ -1,5 +1,5 @@
 # pull official base image
-FROM python:3.10-slim-bullseye
+FROM python:3.11.1-slim-bullseye as Base
 
 # This flag is important to output python logs correctly in docker
 ENV PYTHONUNBUFFERED 1
