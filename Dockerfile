@@ -23,9 +23,5 @@ COPY . .
 
 RUN /home/lesa/venv/bin/pip install -r requirements.txt
 
-RUN chmod -R 774 /home/lesa \
-    && chown -R lesa:root /home/lesa
-
-USER lesa
-
 CMD ["/home/lesa/venv/bin/python", "-m", "main"]
+
