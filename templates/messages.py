@@ -8,7 +8,7 @@ https://platform.openai.com/account/api-keys\n
 
 Commands:
     /help - get information
-    /set_key - set OpenAI key. Required to get started.
+    /set_key - set OpenAI key. Required to get started!
     /set_mode - choosing a learning or free mode. In free mode, the bot only receives the text of your message. In the learning mode, the AI also receives commands to check your message for errors and continue the conversation. 
     /set_text - setting for displaying text responses. Whether to receive back the recognized text of your messages and the text of replies.
     /set_tts- Set a voice response timeout. If this time elapses, the bot will stop waiting for a voice response and only return text. Turning off the voice response speeds up the text response.
@@ -32,13 +32,6 @@ BTC:
 bc1q938mszer4259m5lq2j30q9lt0nnaktugtyd0pr
 Kaspi/Visa:
 4400430213071225
-
-Commands:
-    /help - get information.
-    /set_key - set OpenAI key.
-    /set_mode - choosing a learning or free mode.
-    /set_text - setting for displaying text responses.
-    /set_tts - Set a voice response timeout.
 """
 
 ACCAUNT_IS_NOT_EXIST = """

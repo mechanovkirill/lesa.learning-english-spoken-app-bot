@@ -19,10 +19,13 @@ RUN apt update  -y \
     && python3 -m venv venv
 #    && apt install -y libsndfile1\
 
-USER lesa
-
 COPY . .
 
-RUN pip3 install -r requirements.txt
+RUN /home/lesa/venv/bin/pip install -r requirements.txt
 
-CMD ["python3", "__main__.py"]
+RUN chmod -R 774 /home/lesa \
+    && chown -R lesa:root /home/lesa
+
+USER lesa
+
+CMD ["/home/lesa/venv/bin/python", "-m", "main"]
