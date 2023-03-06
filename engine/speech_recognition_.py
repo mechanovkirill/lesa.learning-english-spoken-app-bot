@@ -87,8 +87,9 @@ def speech_recognition_vosk(speech: BytesIO) -> str | None:
 
     result = json.loads(rec.FinalResult())
     text = result['alternatives'][0]['text']
+    text = str(text)
 
-    return text
+    return text.capitalize()
 
 
 def convert(_voice):

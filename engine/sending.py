@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 
 def send_via_bot(_user_id: int, content: tuple) -> None:
-    # start_t = time.monotonic()
 
     async def bot() -> None:
         try:
@@ -35,8 +34,6 @@ def send_via_bot(_user_id: int, content: tuple) -> None:
                 logger.warning(f"Sanding error. {exc.message}")
 
     asyncio.run(bot())
-
-    # logger.info(f'Sent by bot at {time.monotonic() - start_t}')
 
 
 def send_text_msg(chat_id: int, text: str) -> None:

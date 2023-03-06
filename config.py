@@ -17,6 +17,10 @@ DEBUG = os.getenv("DEBUG", "")
 
 THREADS_NUM = os.getenv("THREADS", "")
 
+TOKENS_AMOUNT = os.getenv("TOKENS_AMOUNT", "")
+
+TEMPERATURE = os.getenv("TEMPERATURE", "")
+
 LOGGING_CONFIG = {
     'version': 1,
     'disable_existing_loggers': False,

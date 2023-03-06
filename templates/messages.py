@@ -1,5 +1,5 @@
 GREETING_MESSAGE = """
-Hello, I'm LESA! I provide an audio interface for practicing spoken English through communication with the GPT-3 AI DaVinci. The DaVinci model is capable of generating texts, understanding context, answering questions, and recognizing errors in the text.
+Hello, I'm LESA! I provide an audio interface for practicing spoken English through communication with the AI ChatGPT. The ChatGPT model is capable of generating texts, "understanding" context, answering questions, and recognizing errors in the text.
 
     To start communicating, you need to go to the OpenAI page at the link below, register, and get an API key.\n
 https://platform.openai.com/account/api-keys\n

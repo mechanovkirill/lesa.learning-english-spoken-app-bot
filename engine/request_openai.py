@@ -1,14 +1,21 @@
 import requests
 from db import BotUserClass
+from config import TOKENS_AMOUNT, TEMPERATURE
 
 import logging
 import traceback
+
 logger = logging.getLogger(__name__)
 
 
-def request_to_openai(_text: str, _user_settings: BotUserClass) -> str:
+def request_to_openai(
+        _text: str,
+        _user_settings: BotUserClass,
+        tokens_n=int(TOKENS_AMOUNT),
+        temperature=float(TEMPERATURE),
+) -> str:
     """Send text to API and return response"""
-    openai_endpoint = "https://api.openai.com/v1/completions"
+    openai_endpoint = "https://api.openai.com/v1/chat/completions"
     key = _user_settings.api_key
     if not key:
         response_text = """
@@ -19,19 +26,27 @@ def request_to_openai(_text: str, _user_settings: BotUserClass) -> str:
 
     if _user_settings.mode == 1:
         mode = {
-            "model": "text-davinci-003",
-            "prompt": f"{_text}" """- answer briefly. 
-            What are the mistakes in the first text above? Ask a question to continue the conversation. 
-            """,
-            "max_tokens": 100,
-            "temperature": 0.5,
+            "model": "gpt-3.5-turbo",
+            "messages": [{
+                "role": "user",
+                "content": f'What are the errors in the following statement: "{_text}"? If the statement did not '
+                           'contain a question, then ask a question to keep the conversation going, otherwise '
+                           'answer the question in the statement and then ask a question to keep the conversation '
+                           'going. (Short example:"What\'s the advantages of AI in business and how can it improve '
+                           'customer experience?"'
+                           'The two grammatical errors are:'
+                           '"Explanation of the first error".'
+                           '"Explanation of the second error".'
+                           '"The answer to the question in the statement".'
+                           'Counterquestion:e.g."How do you want to use AI?")'
+            }],
+            "max_tokens": tokens_n,
+            "temperature": temperature,
         }
     else:
         mode = {
-            "model": "text-davinci-003",
-            "prompt": f"{_text}",
-            "max_tokens": 100,
-            "temperature": 0.7,
+            "model": "gpt-3.5-turbo",
+            "messages": [{"role": "user", "content": f"{_text}"}]
         }
 
     # Send the text to the OpenAI API
@@ -47,7 +62,7 @@ def request_to_openai(_text: str, _user_settings: BotUserClass) -> str:
 
     # Get the response from the OpenAI API
     try:
-        response_text = response.json()["choices"][0]["text"]
+        response_text = response.json()['choices'][0]['message']['content']
         return response_text
     except Exception:
         logger.warning(f"No response from OpenAI.{traceback.format_exc()}")
