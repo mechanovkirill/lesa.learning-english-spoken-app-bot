@@ -35,8 +35,8 @@ def request_to_openai(
                            'going. (Short example:"What\'s the advantages of AI in business and how can it improve '
                            'customer experience?"'
                            'The two grammatical errors are:'
-                           '"Explanation of the first error".'
-                           '"Explanation of the second error".'
+                           '"Explanation of errors (list)".'
+                           '"Correct spelling of the statement".'
                            '"The answer to the question in the statement".'
                            'Counterquestion:e.g."How do you want to use AI?")'
             }],
